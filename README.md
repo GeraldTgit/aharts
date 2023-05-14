@@ -1,2 +1,2 @@
 # aharts
-A ticketing system for my father's Home Appliances Repair shop.
+A ticketing system for my father's Home Appliance Repair shop.
