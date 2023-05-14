@@ -45,21 +45,42 @@ class MainWindow(qtw.QWidget):
         self.timer.timeout.connect(self.update_time)
         self.timer.start(1000) # update every 1 second
 
-        # Userform greeting with date
-        placeholder_header = qtw.QLabel("Add New Customer: ")
-        placeholder_header.setFont(qtg.QFont('Arial', 15))
-        self.layout().addWidget(placeholder_header)
+        # Customer form header
+        cust_header = qtw.QLabel("Customer Form")
+        cust_header.setFont(qtg.QFont('Arial', 15))
+        self.layout().addWidget(cust_header)
+
+        # call aharts_cust_form.py
+        cust_entry_button = qtw.QPushButton("Add/Update Customer Information", clicked = lambda: cust_entry_form())
+        self.layout().addWidget(cust_entry_button)
+
+        # Ticket form header
+        cust_header = qtw.QLabel("Ticket Form")
+        cust_header.setFont(qtg.QFont('Arial', 15))
+        self.layout().addWidget(cust_header)
+
+        # call aharts_ticket_entry.py
+        ticket_entry_button = qtw.QPushButton("Add/Update Service Ticket", clicked = lambda: ticket_entry_form())
+        self.layout().addWidget(ticket_entry_button)
 
         # call aharts_cust_entry.py
-        cust_entry_button = qtw.QPushButton("Add New Customer", clicked = lambda: cust_entry_form())
-        self.layout().addWidget(cust_entry_button)
+        reload_button = qtw.QPushButton("RELOAD PAGE", clicked = lambda: reload())
+        self.layout().addWidget(reload_button)
 
         # This part is very IMPORTANT!!
         self.show()
 
+        # To call customer form
         def cust_entry_form():
-            subprocess.run(["python", "aharts_cust_entry.py"])
-            
+            subprocess.run(["python", "aharts_cust_form.py"])
+
+        # To call ticket form
+        def ticket_entry_form():
+            print("Wala pa. Wag kang excited")
+
+        # To reload the page
+        def reload():
+            print("Sorry.. still not working")
 
     # This code updates uf_current_time every seconds
     def update_time(self):
@@ -72,4 +93,3 @@ app = qtw.QApplication([])
 mw = MainWindow()
 
 app.exec_()
-
