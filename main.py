@@ -4,6 +4,8 @@ import PyQt5.QtGui as qtg
 import datetime
 from PyQt5.QtCore import QTimer
 import subprocess
+import sys
+import os
 
 current_time = datetime.datetime.now()
 current_hour = current_time.hour
@@ -16,6 +18,9 @@ else:
     greetings = "Good evening!"
 
 current_date = current_time.strftime("%A, %B %d, %Y")
+
+# present working directory
+pwd_ = os.getcwd()
 
 class MainWindow(qtw.QWidget):
     def __init__(self):
@@ -63,7 +68,7 @@ class MainWindow(qtw.QWidget):
         ticket_entry_button = qtw.QPushButton("Add/Update Service Ticket", clicked = lambda: ticket_entry_form())
         self.layout().addWidget(ticket_entry_button)
 
-        # call aharts_cust_entry.py
+        # refresh page
         reload_button = qtw.QPushButton("RELOAD PAGE", clicked = lambda: reload())
         self.layout().addWidget(reload_button)
 
@@ -72,7 +77,7 @@ class MainWindow(qtw.QWidget):
 
         # To call customer form
         def cust_entry_form():
-            subprocess.run(["python", "aharts_cust_form.py"])
+            CloseOpen("aharts_cust_form.py")
 
         # To call ticket form
         def ticket_entry_form():
@@ -80,7 +85,19 @@ class MainWindow(qtw.QWidget):
 
         # To reload the page
         def reload():
-            print("Sorry.. still not working")
+            CloseOpen("reload.py")
+
+        # To close existing script and then open main.py
+        def CloseOpen(page):
+            # Path to the Python script you want to rerun
+            script_path = pwd_+"/"+page
+            # Define the command to run the new script
+            new_script_command = ["python", script_path]
+            # Start the new script
+            subprocess.Popen(new_script_command)
+            # Exit the current script
+            sys.exit()
+            
 
     # This code updates uf_current_time every seconds
     def update_time(self):
