@@ -1,9 +1,9 @@
 # Anthony's Home Appliance Repair Ticketing System
 import PyQt5.QtWidgets as qtw
 import PyQt5.QtGui as qtg
-import datetime
 from PyQt5.QtCore import QTimer
 import subprocess
+import datetime
 import sys
 import os
 
@@ -56,7 +56,7 @@ class MainWindow(qtw.QWidget):
         self.layout().addWidget(cust_header)
 
         # call aharts_cust_form.py
-        cust_entry_button = qtw.QPushButton("Add/Update Customer Information", clicked = lambda: cust_entry_form())
+        cust_entry_button = qtw.QPushButton("Customer Information", clicked = lambda: cust_entry_form())
         self.layout().addWidget(cust_entry_button)
 
         # Ticket form header
@@ -65,7 +65,7 @@ class MainWindow(qtw.QWidget):
         self.layout().addWidget(cust_header)
 
         # call aharts_ticket_entry.py
-        ticket_entry_button = qtw.QPushButton("Add/Update Service Ticket", clicked = lambda: ticket_entry_form())
+        ticket_entry_button = qtw.QPushButton("Service Ticket", clicked = lambda: ticket_entry_form())
         self.layout().addWidget(ticket_entry_button)
 
         # refresh page
