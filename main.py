@@ -26,7 +26,7 @@ class MainWindow(qtw.QWidget):
     def __init__(self):
         super().__init__()
         # System userform title
-        self.setWindowTitle("AHARTS")
+        self.setWindowTitle("AHARTS - Menu Page")
         # Userform layout
         self.setLayout(qtw.QVBoxLayout())
 
@@ -56,8 +56,12 @@ class MainWindow(qtw.QWidget):
         self.layout().addWidget(cust_header)
 
         # call aharts_cust_form.py
-        cust_entry_button = qtw.QPushButton("Customer Information", clicked = lambda: cust_entry_form())
+        cust_entry_button = qtw.QPushButton("Add New Customer", clicked = lambda: cust_entry_form())
         self.layout().addWidget(cust_entry_button)
+
+        # call aharts_edit_customer.py
+        cust_edit_button = qtw.QPushButton("Edit Customer Information", clicked = lambda: aharts_edit_customer())
+        self.layout().addWidget(cust_edit_button)
 
         # Ticket form header
         cust_header = qtw.QLabel("Ticket Form")
@@ -68,8 +72,18 @@ class MainWindow(qtw.QWidget):
         ticket_entry_button = qtw.QPushButton("Service Ticket", clicked = lambda: ticket_entry_form())
         self.layout().addWidget(ticket_entry_button)
 
+        # Databases
+        cust_header_db = qtw.QLabel("Database")
+        cust_header_db.setFont(qtg.QFont('Arial', 15))
+        self.layout().addWidget(cust_header_db)
+
+        # Open database button
+        cust_db_button = qtw.QPushButton("View Customer Database", clicked = lambda: open_database_viewer())
+        self.layout().addWidget(cust_db_button)
+
         # refresh page
         reload_button = qtw.QPushButton("RELOAD PAGE", clicked = lambda: reload())
+        reload_button.setFont(qtg.QFont('Arial', 15))
         self.layout().addWidget(reload_button)
 
         # This part is very IMPORTANT!!
@@ -79,9 +93,25 @@ class MainWindow(qtw.QWidget):
         def cust_entry_form():
             CloseOpen("aharts_cust_form.py")
 
+        # To call edit customer information form
+        def aharts_edit_customer():
+            CloseOpen("aharts_edit_customer.py")
+
         # To call ticket form
         def ticket_entry_form():
             print("Wala pa. Wag kang excited")
+
+
+        # To open the customer database view form
+        def open_database_viewer():
+            # Path to the Python script you want to rerun
+            script_path = pwd_+"/database_viewer.py"
+
+            # Define the command to run the new script
+            new_script_command = ["python", script_path]
+
+            # Start the new script
+            subprocess.Popen(new_script_command)
 
         # To reload the page
         def reload():
@@ -110,3 +140,4 @@ app = qtw.QApplication([])
 mw = MainWindow()
 
 app.exec_()
+
