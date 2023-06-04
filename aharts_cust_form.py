@@ -2,7 +2,6 @@
 import PyQt5.QtWidgets as qtw
 import PyQt5.QtGui as qtg
 import win32com.client as win32
-#from cust_form_backend import Backend
 import subprocess
 import tempfile
 import datetime
@@ -15,7 +14,7 @@ class CustWindow(qtw.QWidget):
     def __init__(self):
         super().__init__()
         # System userform title
-        self.setWindowTitle("AHARTS")
+        self.setWindowTitle("AHARTS - Add New Customer")
         # Userform layout
         self.setLayout(qtw.QVBoxLayout())
 
@@ -52,27 +51,6 @@ class CustWindow(qtw.QWidget):
         with open(os.getcwd()+'/param/id_type.txt', 'r') as file:
             items = file.readlines()
 
-        # Look for customer information based on tracking number
-        def look_up_cust():
-            # Get the search query from the entry box
-            search_query = uf_cust_tnum_entry.text()
-            # Open the CSV file and search for the customer information
-            with open(customer_db, 'r') as file:
-                reader = csv.reader(file)
-                for row in reader:
-                    if search_query in row:
-                        # Customer information found, show in the textboxes
-                        uf_cust_fname_entry.setText(row[1])
-                        uf_cust_lname_entry.setText(row[2])
-                        uf_cust_cnum_entry.setText(row[3])
-                        uf_cust_email_entry.setText(row[4])
-                        uf_cust_hadd_entry.setText(row[5])
-                        uf_cust_pid_entry.setCurrentText(row[6])
-                        uf_cust_aid.setText(f'<a href="{row[7]}">{row[7]}</a>')
-                        break
-
-                    clear_all()
-
         # Userform header
         uf_header = qtw.QLabel("Anthony's Home Appliance Repair Ticketing System")
         uf_header.setFont(qtg.QFont('Arial', 25))
@@ -84,15 +62,9 @@ class CustWindow(qtw.QWidget):
         self.layout().addWidget(uf_cust_info)
 
         # Userform header Customer ID number
-        uf_cust_tnum = qtw.QLabel("Tracking Number: ")
-        uf_cust_tnum.setFont(qtg.QFont('Arial', 9))
+        uf_cust_tnum = qtw.QLabel("Tracking Number is auto-generated for new customers")
+        uf_cust_tnum.setFont(qtg.QFont('Arial', 9, italic=True))
         self.layout().addWidget(uf_cust_tnum)
-
-        # Userform Entry box for customer First Name
-        uf_cust_tnum_entry = qtw.QLineEdit()
-        uf_cust_tnum_entry.textChanged.connect(look_up_cust)
-        uf_cust_tnum_entry.setObjectName("fname_field")
-        self.layout().addWidget(uf_cust_tnum_entry)
 
         # Userform header Customer First Name
         uf_cust_fname = qtw.QLabel("First Name: ")
@@ -127,7 +99,7 @@ class CustWindow(qtw.QWidget):
         uf_cust_cnum_entry = qtw.QLineEdit()
         uf_cust_cnum_entry.textChanged.connect(lambda: write_mode(uf_cust_cnum_entry))
         uf_cust_cnum_entry.setObjectName("cnum_field")
-        uf_cust_cnum_entry.setText("+63-917-123-1234")
+        uf_cust_cnum_entry.setText("(+63)-917-123-1234")
         self.layout().addWidget(uf_cust_cnum_entry)
 
         # Userform header Customer Email Address
@@ -164,8 +136,6 @@ class CustWindow(qtw.QWidget):
         uf_cust_pid_entry.currentTextChanged.connect(lambda: write_mode(uf_cust_pid_entry))
         uf_cust_pid_entry.addItems([item.strip() for item in items])
         uf_cust_pid_entry.setObjectName("pid_field")
-        uf_cust_pid_entry.setFont(txtbox_default_font)
-        uf_cust_pid_entry.setStyleSheet(txtbox_default_style)
         self.layout().addWidget(uf_cust_pid_entry)
 
         # Setting up default font and style for text boxes
@@ -173,6 +143,11 @@ class CustWindow(qtw.QWidget):
         for textbox in textbox_widgets:
             textbox.setFont(txtbox_default_font)
             textbox.setStyleSheet(txtbox_default_style)
+
+        othertxtb_widgets = [uf_cust_pid_entry]
+        for other_txtbox in othertxtb_widgets:
+            other_txtbox.setFont(txtbox_default_font)
+            other_txtbox.setStyleSheet(txtbox_default_style)
 
         # Userform header Customer actual identification
         uf_cust_aid = qtw.QLabel("Identification")
@@ -191,12 +166,11 @@ class CustWindow(qtw.QWidget):
 
         # Clear all fields button
         uf_cust_clear_button = qtw.QPushButton("Clear All", clicked = lambda: clear_all())
-        uf_cust_clear_button.clicked.connect(lambda: uf_cust_tnum_entry.setText(""))
         self.layout().addWidget(uf_cust_clear_button)
 
         # Open database button
-        uf_cust_db_button = qtw.QPushButton("Open Database", clicked = lambda: cust_db())
-        self.layout().addWidget(uf_cust_db_button)
+        cust_db_button = qtw.QPushButton("View Customer Database", clicked = lambda: open_database_viewer())
+        self.layout().addWidget(cust_db_button)
 
         # refresh page
         reload_button = qtw.QPushButton("Back to Main", clicked = lambda: to_main())
@@ -213,6 +187,7 @@ class CustWindow(qtw.QWidget):
             if file_name:
                 # Assign the link
                 uf_cust_aid.setText(f'<a href="{file_name[0]}">{file_name[0]}</a>')
+                uf_cust_uid_button.setText("ID Updated")
 
         # This part is very IMPORTANT!!
         self.show()
@@ -243,7 +218,8 @@ class CustWindow(qtw.QWidget):
 
             returnValue = msgBox.exec()
 
-            destination_path = "No Idenfication submitted." # assigning default value if no id provided
+            # assigning default value if no id provided
+            destination_path = "No Idenfication provided." 
             if returnValue == qtw.QMessageBox.Ok:
                 # Transferring the selected file to /../temp_db/id/  
                 id_path=id_path.replace('"','')          
@@ -262,14 +238,23 @@ class CustWindow(qtw.QWidget):
                     destination_path = os.path.join(destination_folder, new_file_name)
 
                     # Copy the file to the destination folder
-                    shutil.copy2(id_path, destination_path)
-                       
-                # if yes proceed saving            
-                saving_it(destination_path)    
+                    destination_path=destination_path.replace(' ','_')                   
+                    try:
+                        shutil.copy2(id_path, destination_path)
+                    except:
+                        pass
+
+                print(destination_path) 
+                saving_it(destination_path)      
+                # if yes proceed saving
+                #if uf_cust_uid_button.text == "ID Updated":     
+                #    saving_it(destination_path.replace(' ','_'))
+                #else:    
+                #    saving_it(id_path.replace(' ','_'))    
                 # if no do nothing
 
         # Saving data in the csv file with new name for identification
-        def saving_it(id_path):
+        def saving_it(new_idpath):
             # Get the input values from the user form
             first_name = uf_cust_fname_entry.text()
             last_name = uf_cust_lname_entry.text()
@@ -301,7 +286,7 @@ class CustWindow(qtw.QWidget):
                 
                 if len(rows) > 0:
                     for row in rows:
-                        if row[0] == uf_cust_tnum_entry.text():
+                        if row[0] == 0:
                             # Customer ID already exists, update the row
                             row[1] = first_name
                             row[2] = last_name
@@ -309,15 +294,15 @@ class CustWindow(qtw.QWidget):
                             row[4] = email
                             row[5] = home_address
                             row[6] = id_type
-                            row[7] = id_path
+                            row[7] = new_idpath
                             break
                     else:
                         # Customer ID doesn't exist, append a new row
-                        rows.append([new_entry_cust_id, first_name, last_name, contact_number, email, home_address, id_type, id_path])
+                        rows.append([new_entry_cust_id, first_name, last_name, contact_number, email, home_address, id_type, new_idpath])
                 else:
                     # Customer.csv is empty, add the headers and append a new row
                     rows.append(headers)
-                    rows.append([new_entry_cust_id, first_name, last_name, contact_number, email, home_address, id_type, id_path])
+                    rows.append([new_entry_cust_id, first_name, last_name, contact_number, email, home_address, id_type, new_idpath])
 
             # Write the modified data back to the file
             with tempfile.NamedTemporaryFile(mode='w', delete=False) as temp_file:
@@ -329,7 +314,6 @@ class CustWindow(qtw.QWidget):
             shutil.move(temp_file.name, customer_db) 
             # Reset components values
             clear_all()
-            uf_cust_tnum_entry.setText("")
 
         # Clear all fields button
         def clear_all():
@@ -340,9 +324,16 @@ class CustWindow(qtw.QWidget):
             uf_cust_aid.setText("Identification")
             uf_cust_aid.setStyleSheet(txtbox_write_style)
 
-        def cust_db():
-            # Open the customer database file with the Excel application
-            subprocess.call(['start', customer_db], shell=True)
+        # To open the customer database view form
+        def open_database_viewer():
+            # Path to the Python script you want to rerun
+            script_path = pwd_+"/database_viewer.py"
+
+            # Define the command to run the new script
+            new_script_command = ["python", script_path]
+
+            # Start the new script
+            subprocess.Popen(new_script_command)
 
         # To reload the page
         def to_main():
