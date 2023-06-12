@@ -1,7 +1,26 @@
 import sys
 import csv
 import os
+import psutil
+import subprocess
 from PyQt5 import QtWidgets, QtGui, QtCore
+
+# Customize scripts
+from logs_generator import *
+
+log_message("Database was viewed")
+
+# Save and closes customer_db in excel application if open
+def save_and_close_database(customer_db):
+    for process in psutil.process_iter(['pid', 'name']):
+        if process.info['name'] == 'EXCEL.EXE':
+            try:
+                process.terminate()
+            except psutil.NoSuchProcess:
+                pass
+
+    subprocess.call(['taskkill', '/f', '/im', 'EXCEL.EXE'], shell=True)
+
 
 class HyperlinkDelegate(QtWidgets.QStyledItemDelegate):
     def __init__(self, parent=None):
@@ -26,6 +45,9 @@ class DatabaseViewerForm(QtWidgets.QMainWindow):
         self.setCentralWidget(self.table_widget)
         self.load_csv_data(file_path)
         self.setup_table()
+        self.search_results = []
+        self.current_search_index = -1
+        self.setup_search()
 
     def setup_table(self):
         delegate = HyperlinkDelegate(self.table_widget)
@@ -37,6 +59,37 @@ class DatabaseViewerForm(QtWidgets.QMainWindow):
             item = self.table_widget.item(row, 7)
             if item is not None:
                 item.setForeground(blue_font_color)
+
+    def setup_search(self):
+        search_widget = QtWidgets.QWidget(self)
+        search_widget.setMaximumWidth(300)
+        search_layout = QtWidgets.QHBoxLayout(search_widget)
+        search_label = QtWidgets.QLabel("Search:")
+        search_line_edit = QtWidgets.QLineEdit()
+        search_line_edit.setPlaceholderText("Enter search text")
+        search_line_edit.setFixedWidth(300)
+        search_line_edit.setFixedHeight(25)
+        search_button = QtWidgets.QPushButton("Search")
+        search_button.setFixedHeight(25)
+        search_button.clicked.connect(lambda: self.search_data(search_line_edit.text()))
+        next_button = QtWidgets.QPushButton("Next")
+        next_button.setFixedHeight(25)
+        next_button.clicked.connect(self.next_search_result)
+        search_layout.addWidget(search_label)
+        search_layout.addWidget(search_line_edit)
+
+        button_layout = QtWidgets.QHBoxLayout()
+        button_layout.addWidget(search_button)
+        button_layout.addWidget(next_button)
+
+        main_layout = QtWidgets.QVBoxLayout()
+        main_layout.addWidget(search_widget)
+        main_layout.addLayout(button_layout)
+        main_layout.addWidget(self.table_widget)
+
+        central_widget = QtWidgets.QWidget()
+        central_widget.setLayout(main_layout)
+        self.setCentralWidget(central_widget)
 
     def load_csv_data(self, file_path):
         with open(file_path, 'r') as file:
@@ -55,14 +108,55 @@ class DatabaseViewerForm(QtWidgets.QMainWindow):
                     item.setTextAlignment(QtCore.Qt.AlignCenter)
                 self.table_widget.setItem(row, column, item)
 
+    def keyPressEvent(self, event):
+        if event.modifiers() == QtCore.Qt.ControlModifier and event.key() == QtCore.Qt.Key_F:
+            self.search_dialog()
+
+    def search_dialog(self):
+        search_dialog = QtWidgets.QDialog(self)
+        search_dialog.setWindowTitle("Search")
+        layout = QtWidgets.QVBoxLayout(search_dialog)
+        search_label = QtWidgets.QLabel("Search:")
+        search_line_edit = QtWidgets.QLineEdit()
+        search_line_edit.setPlaceholderText("Enter search text")       
+        search_button = QtWidgets.QPushButton("Search")
+        search_button.clicked.connect(lambda: self.search_data(search_line_edit.text()))
+        next_button = QtWidgets.QPushButton("Next")
+        next_button.clicked.connect(self.next_search_result)
+        self.next_button = next_button
+        layout.addWidget(search_label)
+        layout.addWidget(search_line_edit)
+        layout.addWidget(search_button)
+        layout.addWidget(next_button)
+        search_dialog.exec_()
+
+    def search_data(self, search_text):
+        self.table_widget.clearSelection()
+        self.search_results = self.table_widget.findItems(search_text, QtCore.Qt.MatchContains)
+        self.current_search_index = -1
+        self.next_search_result()
+
+    def next_search_result(self):
+        if self.search_results:
+            if self.current_search_index == len(self.search_results) - 1:
+                self.current_search_index = 0
+            else:
+                self.current_search_index += 1
+
+            item = self.search_results[self.current_search_index]
+            self.table_widget.setCurrentItem(item)
+            self.table_widget.scrollToItem(item)
+            self.table_widget.setFocus()
+
+
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
     width = 800  # Specify the desired width of the form
     height = 600  # Specify the desired height of the form
-    pwd_ = os.getcwd().replace('\\','/')  
-    temp_db = pwd_+"/temp_db/"
+    pwd_ = os.getcwd().replace('\\', '/')
+    temp_db = pwd_ + "/temp_db/"
     # customer database file path
-    customer_db = temp_db+"customer.csv"
+    customer_db = temp_db + "customer.csv"
     database_window = DatabaseViewerForm(width, height, customer_db)
     database_window.show()
     sys.exit(app.exec_())
