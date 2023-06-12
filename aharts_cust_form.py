@@ -1,14 +1,22 @@
 # Anthony's Home Appliance Repair Ticketing System
+from PyQt5.QtWidgets import QMessageBox
 import PyQt5.QtWidgets as qtw
-import PyQt5.QtGui as qtg
 import win32com.client as win32
+import PyQt5.QtGui as qtg
 import subprocess
 import tempfile
 import datetime
 import shutil
-import os
 import sys
 import csv
+import re
+import os
+
+# Customize scripts
+from add_new_customer_backend import *
+from database_viewer import *
+from logs_generator import *
+from goto_page import *
 
 class CustWindow(qtw.QWidget):
     def __init__(self):
@@ -23,7 +31,7 @@ class CustWindow(qtw.QWidget):
         pwd_ = os.getcwd().replace('\\','/')  
         temp_db = pwd_+"/temp_db/"
 
-        # last/hisghest customer id
+        # customer database file name
         customer_db = temp_db+"customer.csv"
 
         # Define the constant for font and style properties # PLACEHOLDER
@@ -39,20 +47,12 @@ class CustWindow(qtw.QWidget):
             entry_box.setFont(txtbox_write_font)
             entry_box.setStyleSheet(txtbox_write_style)
 
-        # Check if the customer.csv file exists in the customer_db directory
-        if not os.path.isfile(customer_db):
-            # Create a new customer.csv file with headers
-            headers = ['Customer ID', 'First Name', 'Last Name', 'Contact Number', 'Email', 'Home Address', 'ID Type', 'ID Path']
-            with open(customer_db, 'w', newline='') as file:
-                writer = csv.writer(file)
-                writer.writerow(headers)
-
         # Userform Entry box for customer identification type
         with open(os.getcwd()+'/param/id_type.txt', 'r') as file:
             items = file.readlines()
 
         # Userform header
-        uf_header = qtw.QLabel("Anthony's Home Appliance Repair Ticketing System")
+        uf_header = qtw.QLabel("Anthony's Home Appliance-Repair Ticketing System")
         uf_header.setFont(qtg.QFont('Arial', 25))
         self.layout().addWidget(uf_header)
 
@@ -73,8 +73,7 @@ class CustWindow(qtw.QWidget):
 
         # Userform Entry box for customer First Name
         uf_cust_fname_entry = qtw.QLineEdit()
-        uf_cust_fname_entry.textChanged.connect(lambda: write_mode(uf_cust_fname_entry))
-        uf_cust_fname_entry.setText("Given name")
+        uf_cust_fname_entry.setPlaceholderText("Given name")
         uf_cust_fname_entry.setObjectName("fname_field")
         self.layout().addWidget(uf_cust_fname_entry)
 
@@ -85,8 +84,7 @@ class CustWindow(qtw.QWidget):
 
         # Userform Entry box for customer Last Name 
         uf_cust_lname_entry = qtw.QLineEdit()
-        uf_cust_lname_entry.textChanged.connect(lambda: write_mode(uf_cust_lname_entry))
-        uf_cust_lname_entry.setText("Surname")
+        uf_cust_lname_entry.setPlaceholderText("Surname")
         uf_cust_lname_entry.setObjectName("lname_field")
         self.layout().addWidget(uf_cust_lname_entry)
 
@@ -97,9 +95,8 @@ class CustWindow(qtw.QWidget):
 
         # Userform Entry box for customer Contact Number
         uf_cust_cnum_entry = qtw.QLineEdit()
-        uf_cust_cnum_entry.textChanged.connect(lambda: write_mode(uf_cust_cnum_entry))
         uf_cust_cnum_entry.setObjectName("cnum_field")
-        uf_cust_cnum_entry.setText("(+63)-917-123-1234")
+        uf_cust_cnum_entry.setPlaceholderText("(+63)-917-123-1234")
         self.layout().addWidget(uf_cust_cnum_entry)
 
         # Userform header Customer Email Address
@@ -109,9 +106,8 @@ class CustWindow(qtw.QWidget):
 
         # Userform Entry box for customer Email Address
         uf_cust_email_entry = qtw.QLineEdit()
-        uf_cust_email_entry.textChanged.connect(lambda: write_mode(uf_cust_email_entry))
         uf_cust_email_entry.setObjectName("Email_field")
-        uf_cust_email_entry.setText("username@domain.com")
+        uf_cust_email_entry.setPlaceholderText("username@domain.com")
         self.layout().addWidget(uf_cust_email_entry)
 
         # Userform header Customer Home Address
@@ -121,9 +117,8 @@ class CustWindow(qtw.QWidget):
 
         # Userform Entry box for customer Home Address
         uf_cust_hadd_entry = qtw.QLineEdit()
-        uf_cust_hadd_entry.textChanged.connect(lambda: write_mode(uf_cust_hadd_entry))
         uf_cust_hadd_entry.setObjectName("Hadd_field")
-        uf_cust_hadd_entry.setText("Home# Street Name, Barangay, City Name Province Zip Code")
+        uf_cust_hadd_entry.setPlaceholderText("Home# Street Name, Barangay, City Name Province Zip Code")
         self.layout().addWidget(uf_cust_hadd_entry)
 
         # Userform header Customer identification type
@@ -140,14 +135,9 @@ class CustWindow(qtw.QWidget):
 
         # Setting up default font and style for text boxes
         textbox_widgets = [uf_cust_fname_entry, uf_cust_lname_entry, uf_cust_cnum_entry, uf_cust_email_entry, uf_cust_hadd_entry]
-        for textbox in textbox_widgets:
-            textbox.setFont(txtbox_default_font)
-            textbox.setStyleSheet(txtbox_default_style)
-
-        othertxtb_widgets = [uf_cust_pid_entry]
-        for other_txtbox in othertxtb_widgets:
-            other_txtbox.setFont(txtbox_default_font)
-            other_txtbox.setStyleSheet(txtbox_default_style)
+        #for textbox in textbox_widgets:
+        uf_cust_pid_entry.setFont(txtbox_default_font)
+        uf_cust_pid_entry.setStyleSheet(txtbox_default_style)
 
         # Userform header Customer actual identification
         uf_cust_aid = qtw.QLabel("Identification")
@@ -164,19 +154,19 @@ class CustWindow(qtw.QWidget):
         uf_cust_save_button = qtw.QPushButton("Save", clicked = lambda: save_it())
         self.layout().addWidget(uf_cust_save_button)
 
-        # Clear all fields button
+        # Clear all fields buttonl
         uf_cust_clear_button = qtw.QPushButton("Clear All", clicked = lambda: clear_all())
         self.layout().addWidget(uf_cust_clear_button)
 
         # Open database button
-        cust_db_button = qtw.QPushButton("View Customer Database", clicked = lambda: open_database_viewer())
+        cust_db_button = qtw.QPushButton("View Customer Database", clicked = lambda: goto_page("database_viewer.py"))
         self.layout().addWidget(cust_db_button)
 
         # refresh page
-        reload_button = qtw.QPushButton("Back to Main", clicked = lambda: to_main())
-        self.layout().addWidget(reload_button)
+        to_main_button = qtw.QPushButton("Back to Main", clicked = lambda: goto_page("main.py"))
+        self.layout().addWidget(to_main_button)
 
-        # Upload ID        
+        # Choose for ID to upload  
         def open_file():
             options = qtw.QFileDialog.Options()
             file_filter = "Image files (*.*)"
@@ -193,22 +183,7 @@ class CustWindow(qtw.QWidget):
         self.show()
 
         # To confirm if user wants to save update
-        def save_it():
-            # Close the customer_db Excel application so it can save changes
-            excel = win32.gencache.EnsureDispatch('Excel.Application')
-            workbook = excel.Workbooks.Open(customer_db)
-            # Save changes
-            workbook.Save()
-            subprocess.call(['taskkill', '/f', '/im', 'EXCEL.EXE'], shell=True)
-
-            # Slicing identification label to get the absolute path only
-            id_path = uf_cust_aid.text()
-            # Find the index of '<' and '>'
-            start_index = id_path.find('=')
-            end_index = id_path.find('>')
-            # Extract the substring between '=' and '>'
-            id_path = id_path[start_index + 1 : end_index] 
-
+        def save_it():       
             msgBox = qtw.QMessageBox()
             msgBox.setIcon(qtw.QMessageBox.Question)
             msgBox.setText("Are you sure you want to save changes?")
@@ -217,137 +192,24 @@ class CustWindow(qtw.QWidget):
             msgBox.buttonClicked.connect(qtw.QMessageBox)
 
             returnValue = msgBox.exec()
-
-            # assigning default value if no id provided
-            destination_path = "No Idenfication provided." 
             if returnValue == qtw.QMessageBox.Ok:
+                # Save and closes customer_db in excel application if open
+                save_and_close_database(customer_db)
                 # Transferring the selected file to /../temp_db/id/  
-                id_path=id_path.replace('"','')          
-                if uf_cust_aid.text() != "Identification":
-                    destination_folder = temp_db+"id/"
-                    
-                    # Get the filename and extension from the source path
-                    file_name = os.path.basename(id_path)
-                    file_name, file_extension = os.path.splitext(file_name)
-
-                    # Generate the new filename with the current date and time
-                    current_date = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-                    new_file_name = f"{file_name}_{current_date}{file_extension}"
-
-                    # Create the destination path by combining the destination folder and the new filename
-                    destination_path = os.path.join(destination_folder, new_file_name)
-
-                    # Copy the file to the destination folder
-                    destination_path=destination_path.replace(' ','_')                   
-                    try:
-                        shutil.copy2(id_path, destination_path)
-                    except:
-                        pass
-
-                print(destination_path) 
-                saving_it(destination_path)      
-                # if yes proceed saving
-                #if uf_cust_uid_button.text == "ID Updated":     
-                #    saving_it(destination_path.replace(' ','_'))
-                #else:    
-                #    saving_it(id_path.replace(' ','_'))    
-                # if no do nothing
-
-        # Saving data in the csv file with new name for identification
-        def saving_it(new_idpath):
-            # Get the input values from the user form
-            first_name = uf_cust_fname_entry.text()
-            last_name = uf_cust_lname_entry.text()
-            contact_number = uf_cust_cnum_entry.text()
-            email = uf_cust_email_entry.text()
-            home_address = uf_cust_hadd_entry.text()
-            id_type = uf_cust_pid_entry.currentText()
-            
-            with open(customer_db, 'r') as file:
-                reader = csv.reader(file)
-                # skip header row if it exists
-                if csv.Sniffer().has_header(file.read(1024)):
-                    file.seek(0)
-                    next(reader)
-
-                try:
-                    # Get the max value from the first column or assign 0 if the reader is empty
-                    highest_cust_id = max(int(row[0]) for row in reader)
-                except ValueError:
-                    highest_cust_id = 0
-
-            # Assign a value of 1 if no existing entries
-            new_entry_cust_id = highest_cust_id + 1
-            
-            # Rest of the code to update or append rows
-            with open(customer_db, 'r') as file:
-                reader = csv.reader(file)
-                rows = list(reader)
+                destination_path = upload_identification(uf_cust_aid.text())
                 
-                if len(rows) > 0:
-                    for row in rows:
-                        if row[0] == 0:
-                            # Customer ID already exists, update the row
-                            row[1] = first_name
-                            row[2] = last_name
-                            row[3] = contact_number
-                            row[4] = email
-                            row[5] = home_address
-                            row[6] = id_type
-                            row[7] = new_idpath
-                            break
-                    else:
-                        # Customer ID doesn't exist, append a new row
-                        rows.append([new_entry_cust_id, first_name, last_name, contact_number, email, home_address, id_type, new_idpath])
-                else:
-                    # Customer.csv is empty, add the headers and append a new row
-                    rows.append(headers)
-                    rows.append([new_entry_cust_id, first_name, last_name, contact_number, email, home_address, id_type, new_idpath])
-
-            # Write the modified data back to the file
-            with tempfile.NamedTemporaryFile(mode='w', delete=False) as temp_file:
-                with open(temp_file.name, 'w', newline='') as file:
-                    writer = csv.writer(file)
-                    writer.writerows(rows)  # Write the rows
-
-            # Replace the original file with the updated file
-            shutil.move(temp_file.name, customer_db) 
-            # Reset components values
-            clear_all()
+                customer_info = [cust_info.text() for cust_info in textbox_widgets] + [uf_cust_pid_entry.currentText(),destination_path]
+                
+                # Save new customer to database
+                save_new(customer_info)
+                # Reset components values
+                clear_all()    
 
         # Clear all fields button
         def clear_all():
             for textbox in textbox_widgets:
-                textbox.setText("")
-                write_mode(textbox)
+                textbox.clear()
             uf_cust_pid_entry.setCurrentIndex(-1)
-            uf_cust_aid.setText("Identification")
-            uf_cust_aid.setStyleSheet(txtbox_write_style)
-
-        # To open the customer database view form
-        def open_database_viewer():
-            # Path to the Python script you want to rerun
-            script_path = pwd_+"/database_viewer.py"
-
-            # Define the command to run the new script
-            new_script_command = ["python", script_path]
-
-            # Start the new script
-            subprocess.Popen(new_script_command)
-
-        # To reload the page
-        def to_main():
-            # Path to the Python script you want to rerun
-            script_path = pwd_+"/reload.py"
-
-            # Define the command to run the new script
-            new_script_command = ["python", script_path]
-
-            # Start the new script
-            subprocess.Popen(new_script_command)
-
-            # Exit the current script
-            sys.exit()
 
     def label_clicked(self, url):
     # Handle the label click event
