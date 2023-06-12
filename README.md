@@ -15,7 +15,7 @@ Edit Customer Information Page:
 
 Customer Database Viewer Page:
 
-![image](https://github.com/GeraldTgit/aharts/assets/117510768/3b9b890a-4c4c-40f8-ba10-b1430a2cb679)
+![image](https://github.com/GeraldTgit/aharts/assets/117510768/61a7e771-7413-464f-aba4-54e26f284d24)
 
 Sample log by using the script log_generator.py
 
