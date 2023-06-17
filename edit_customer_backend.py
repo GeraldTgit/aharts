@@ -1,28 +1,18 @@
 # Anthony's Home Appliance Repair Ticketing System
 from PyQt5.QtWidgets import QMessageBox
-import PyQt5.QtWidgets as qtw
-import win32com.client as win32
-import PyQt5.QtGui as qtg
-import subprocess
 import tempfile
 import datetime
 import shutil
 import os
-import sys
 import csv
 
 # Customize scripts
 from logs_generator import *
 from add_new_customer_backend import *
+from public_backend import *
 from goto_page import *
 
 # SETUP EVERYTHING FIRST
-# A destination folder where customer information will be saved
-pwd_ = os.getcwd().replace('\\','/')  
-temp_db = pwd_+"/temp_db/"
-
-# customer database file name
-customer_db = temp_db+"customer.csv"
 
 # Customer database header
 headers = ['Customer ID', 'First Name', 'Last Name', 'Contact Number', 'Email', 'Home Address', 'ID Type', 'ID Path']
@@ -40,7 +30,7 @@ def upload_identification(id_path,update):
     if update == "no":
         return id_path
 
-    destination_folder = temp_db+"id/"
+    destination_folder = temp_db()+"id/"
                     
     # Get the filename and extension from the source path
     file_name = os.path.basename(id_path)
@@ -64,16 +54,16 @@ def upload_identification(id_path,update):
 
 # Check if the customer.csv file exists in the customer_db directory
 def check_customer_db():
-    if not os.path.isfile(customer_db):
+    if not os.path.isfile(customer_db()):
         # Create a new customer.csv file with headers
-        with open(customer_db, 'w', newline='') as file:
+        with open(customer_db(), 'w', newline='') as file:
             writer = csv.writer(file)
             writer.writerow(headers)
             log_message("Customer database created.")
 
 def save_update(customer_info):         
     # Rest of the code to update or append rows
-    with open(customer_db, 'r') as file:
+    with open(customer_db(), 'r') as file:
         reader = csv.reader(file)
         rows = list(reader)
         
@@ -93,7 +83,7 @@ def save_update(customer_info):
             writer.writerows(rows)  # Write the rows
 
     # Replace the original file with the updated file
-    shutil.move(temp_file.name, customer_db)
+    shutil.move(temp_file.name, customer_db())
     
     # Prompt message and log
     message = f"Customer information updated : \n FROM: {before_update_cust_info} \n TO: {after__update_cust_info}"
