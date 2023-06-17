@@ -1,21 +1,14 @@
-# Anthony's Home Appliance Repair Ticketing System
-from PyQt5.QtWidgets import QMessageBox
+# Anthony's Home Appliance Repair Ticketing System 
 import PyQt5.QtWidgets as qtw
-import win32com.client as win32
 import PyQt5.QtGui as qtg
-import subprocess
-import tempfile
-import datetime
-import shutil
 import sys
-import csv
-import re
 import os
 
 # Customize scripts
 from add_new_customer_backend import *
 from database_viewer import *
 from logs_generator import *
+from public_backend import *
 from goto_page import *
 
 class CustWindow(qtw.QWidget):
@@ -27,12 +20,6 @@ class CustWindow(qtw.QWidget):
         self.setLayout(qtw.QVBoxLayout())
 
         # SETUP EVERYTHING FIRST
-        # A destination folder where customer information will be saved
-        pwd_ = os.getcwd().replace('\\','/')  
-        temp_db = pwd_+"/temp_db/"
-
-        # customer database file name
-        customer_db = temp_db+"customer.csv"
 
         # Define the constant for font and style properties # PLACEHOLDER
         txtbox_default_font = qtg.QFont('Arial', 9, italic=True)
@@ -193,16 +180,18 @@ class CustWindow(qtw.QWidget):
 
             returnValue = msgBox.exec()
             if returnValue == qtw.QMessageBox.Ok:
-                # Save and closes customer_db in excel application if open
-                save_and_close_database(customer_db)
+                # Save and closes customer_db() in excel application if open
+                save_and_close_database(customer_db())
+
                 # Transferring the selected file to /../temp_db/id/  
                 destination_path = upload_identification(uf_cust_aid.text())
                 
+                # List customer information
                 customer_info = [cust_info.text() for cust_info in textbox_widgets] + [uf_cust_pid_entry.currentText(),destination_path]
                 
                 # Save new customer to database
                 save_new(customer_info)
-                # Reset components values
+                # Reset components values               
                 clear_all()    
 
         # Clear all fields button
@@ -210,6 +199,8 @@ class CustWindow(qtw.QWidget):
             for textbox in textbox_widgets:
                 textbox.clear()
             uf_cust_pid_entry.setCurrentIndex(-1)
+            uf_cust_uid_button.setText("Upload ID")
+            uf_cust_aid.setText("Identification")
 
     def label_clicked(self, url):
     # Handle the label click event
