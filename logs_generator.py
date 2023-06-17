@@ -1,15 +1,16 @@
 import datetime
 import os
 
-# Setting directory
-pwd_ = os.getcwd().replace('\\', '/')
-logs_dir = pwd_ + "/temp_db/logs/"
+from public_backend import *
 
 # Generate the new filename with the current date
 current_date = datetime.datetime.now().strftime("%Y-%m-%d")
 
 # Generate timestamping for each log
 current_time = datetime.datetime.now().strftime("%H:%M:%S")
+
+# Setting directory
+logs_dir = temp_db()+"logs/"
 
 # log file path + new file name
 logs_absolute_dir = logs_dir + "aharts_log_" + current_date + ".log"
@@ -26,5 +27,6 @@ def setup_log_file():
 
 # Open the file in append mode and write the log message
 def log_message(message):
+    setup_log_file()
     with open(logs_absolute_dir, 'a') as file:
         file.write(f"{current_time} : {message}" + "\n")
