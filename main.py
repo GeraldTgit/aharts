@@ -5,12 +5,12 @@ import PyQt5.QtGui as qtg
 from PyQt5.QtCore import Qt
 from PyQt5.QtCore import QTimer
 import datetime
-import os
 
 # Customize scripts
 from logs_generator import *
 from add_new_customer_backend import *
 from goto_page import *
+from public_backend import *
 
 # Param checker
 setup_log_file()
@@ -28,9 +28,6 @@ else:
 
 current_date = current_time.strftime("%A, %B %d, %Y")
 
-# present working directory
-pwd_ = os.getcwd()
-
 class MainWindow(qtw.QWidget):
     def __init__(self):
         super().__init__()
@@ -38,6 +35,7 @@ class MainWindow(qtw.QWidget):
         self.setWindowTitle("AHARTS - Main Manu")
         # Userform layout
         self.setLayout(qtw.QVBoxLayout())
+        self.setWindowIcon(qtg.QIcon(tsys_icon()))
 
         # Userform header
         uf_header = qtw.QLabel("Anthony's Home Appliance-Repair Ticketing System")
@@ -112,10 +110,9 @@ class MainWindow(qtw.QWidget):
         # get the current time as a string
         current_time = datetime.datetime.now().strftime("%I:%M:%S %p")
         # update the text property of the existing QLabel object
-        self.uf_current_time.setText("                                                                                                                                                                                                                              " + current_time)
+        self.uf_current_time.setText(current_time)
 
 app = qtw.QApplication([])
 mw = MainWindow()
 
 app.exec_()
-
