@@ -1,12 +1,12 @@
 import sys
 import csv
-import os
 import psutil
 import subprocess
 from PyQt5 import QtWidgets, QtGui, QtCore
 
 # Customize scripts
 from logs_generator import *
+from public_backend import *
 
 log_message("Database was viewed")
 
@@ -153,10 +153,6 @@ if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
     width = 800  # Specify the desired width of the form
     height = 600  # Specify the desired height of the form
-    pwd_ = os.getcwd().replace('\\', '/')
-    temp_db = pwd_ + "/temp_db/"
-    # customer database file path
-    customer_db = temp_db + "customer.csv"
-    database_window = DatabaseViewerForm(width, height, customer_db)
+    database_window = DatabaseViewerForm(width, height, customer_db())
     database_window.show()
     sys.exit(app.exec_())
