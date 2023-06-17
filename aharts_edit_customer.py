@@ -1,12 +1,6 @@
 # Anthony's Home Appliance Repair Ticketing System
-from PyQt5.QtWidgets import QMessageBox
 import PyQt5.QtWidgets as qtw
 import PyQt5.QtGui as qtg
-import win32com.client as win32
-import subprocess
-import tempfile
-import datetime
-import shutil
 import os
 import sys
 import csv
@@ -15,6 +9,7 @@ import csv
 from edit_customer_backend import *
 from database_viewer import *
 from logs_generator import *
+from public_backend import *
 from goto_page import *
 
 class CustWindow(qtw.QWidget):
@@ -26,12 +21,6 @@ class CustWindow(qtw.QWidget):
         self.setLayout(qtw.QVBoxLayout())
 
         # SETUP EVERYTHING FIRST
-        # A destination folder where customer information will be saved
-        pwd_ = os.getcwd().replace('\\','/')  
-        temp_db = pwd_+"/temp_db/"
-
-        # last/hisghest customer id
-        customer_db = temp_db+"customer.csv"
 
         # Define the constant for font and style properties # PLACEHOLDER
         txtbox_default_font = qtg.QFont('Arial', 9, italic=True)
@@ -56,7 +45,7 @@ class CustWindow(qtw.QWidget):
             # Get the search query from the entry box
             search_query = uf_cust_tnum_entry.text()
             # Open the CSV file and search for the customer information
-            with open(customer_db, 'r') as file:
+            with open(customer_db(), 'r') as file:
                 reader = csv.reader(file)
                 for row in reader:
                     if search_query in row:
@@ -231,8 +220,8 @@ class CustWindow(qtw.QWidget):
 
         # To confirm if user wants to save update
         def save_it():
-            # Close the customer_db Excel application so it can save changes
-            save_and_close_database(customer_db)
+            # Close the customer_db() Excel application so it can save changes
+            save_and_close_database(customer_db())
 
             msgBox = qtw.QMessageBox()
             msgBox.setIcon(qtw.QMessageBox.Question)
@@ -252,6 +241,7 @@ class CustWindow(qtw.QWidget):
                 # Upload ID if updated
                 destination_path = upload_identification(uf_cust_aid.text(),update)
                 
+                # List customer information
                 customer_info = [uf_cust_tnum_entry.text()] + [cust_info.text() for cust_info in textbox_widgets] + [uf_cust_pid_entry.currentText(),destination_path]
                 save_update(customer_info)    
 
