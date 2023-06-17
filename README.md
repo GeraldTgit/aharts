@@ -3,7 +3,7 @@ A ticketing system for my father's Home Appliance Repair shop.
 
 Menu Page:
 
-![image](https://github.com/GeraldTgit/aharts/assets/117510768/c9065431-4606-4bbc-b002-142ec9cfafd6)
+![image](https://github.com/GeraldTgit/aharts/assets/117510768/99b2aca2-a873-4c16-88fb-43c98a2ab076)
 
 Add New Customer Page:
 
@@ -20,3 +20,7 @@ Customer Database Viewer Page:
 Sample log by using the script log_generator.py
 
 ![image](https://github.com/GeraldTgit/aharts/assets/117510768/95e5bb88-585f-4d83-be26-32a1588ab3df)
+
+tsystem.ico
+
+![image](https://github.com/GeraldTgit/aharts/assets/117510768/65d0a0f9-47d0-4fb5-9fa1-fa2b4ef684f8)
