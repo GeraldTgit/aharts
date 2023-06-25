@@ -21,6 +21,14 @@ Sample log by using the script log_generator.py
 
 ![image](https://github.com/GeraldTgit/aharts/assets/117510768/95e5bb88-585f-4d83-be26-32a1588ab3df)
 
+Create Service Ticket Page
+
+![image](https://github.com/GeraldTgit/aharts/assets/117510768/c98af24d-48e0-4e26-bf4e-f10429a66e87)
+
+Troubleshooting Page
+
+![image](https://github.com/GeraldTgit/aharts/assets/117510768/4c1f2b11-25a5-4cf9-9ed6-0429991722f3)
+
 tsystem.ico
 
 ![image](https://github.com/GeraldTgit/aharts/assets/117510768/65d0a0f9-47d0-4fb5-9fa1-fa2b4ef684f8)
