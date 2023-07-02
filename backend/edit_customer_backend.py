@@ -7,10 +7,10 @@ import os
 import csv
 
 # Customize scripts
-from logs_generator import *
-from add_new_customer_backend import *
-from public_backend import *
-from goto_page import *
+from backend.logs_generator import *
+from backend.add_new_customer_backend import *
+from backend.public_backend import *
+from backend.goto_page import *
 
 # SETUP EVERYTHING FIRST
 
