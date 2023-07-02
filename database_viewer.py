@@ -1,14 +1,16 @@
 import sys
 import csv
 import psutil
+import ctypes
 import subprocess
 from PyQt5 import QtWidgets, QtGui, QtCore
 
 # Customize scripts
-from logs_generator import *
-from public_backend import *
+from backend.logs_generator import *
+from backend.public_backend import *
 
-log_message("Database was viewed")
+# Task bar icon
+ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid())
 
 # Save and closes customer_db in excel application if open
 def save_and_close_database(customer_db):
@@ -20,6 +22,16 @@ def save_and_close_database(customer_db):
                 pass
 
     subprocess.call(['taskkill', '/f', '/im', 'EXCEL.EXE'], shell=True)
+
+# Check if the customer.csv file exists in the customer_db() directory
+headers = ['Customer ID', 'First Name', 'Last Name', 'Contact Number', 'Email', 'Home Address', 'ID Type', 'ID Path']
+def check_customer_db():
+    if not os.path.isfile(customer_db()):
+        # Create a new customer.csv file with headers
+        with open(customer_db(), 'w', newline='') as file:
+            writer = csv.writer(file, delimiter=',')
+            writer.writerow(headers)
+            log_message("Customer database created.")
 
 
 class HyperlinkDelegate(QtWidgets.QStyledItemDelegate):
@@ -34,12 +46,27 @@ class HyperlinkDelegate(QtWidgets.QStyledItemDelegate):
                 if QtGui.QDesktopServices.openUrl(url):
                     return True
         return super().editorEvent(event, model, option, index)
+    
+# OPEN DATABASE
+def open_cust_database_viewer(self):
+    width = 800  # Specify the desired width of the form
+    height = 600  # Specify the desired height of the form
+    self.database_window = DatabaseViewerForm(width, height, customer_db(),"Customer Database Viewer")
+    self.database_window.show()
+    log_message("Customer Database were viewed")
 
+def open_serviceticket_database_viewer(self):
+    width = 600  # Specify the desired width of the form
+    height = 600  # Specify the desired height of the form
+    self.database_window = DatabaseViewerForm(width, height, service_ticket_db(),"Service-Ticket Database Viewer")
+    self.database_window.show()
+    log_message("Service-Ticket Database were viewed")
 
 class DatabaseViewerForm(QtWidgets.QMainWindow):
-    def __init__(self, width, height, file_path):
+    def __init__(self, width, height, file_path, window_title):
         super().__init__()
-        self.setWindowTitle("Customer Database Viewer")
+        self.setWindowTitle(window_title)
+        self.setWindowIcon(QtGui.QIcon(tsystem_icon()))
         self.resize(width, height)
         self.table_widget = QtWidgets.QTableWidget()
         self.setCentralWidget(self.table_widget)
@@ -148,11 +175,13 @@ class DatabaseViewerForm(QtWidgets.QMainWindow):
             self.table_widget.scrollToItem(item)
             self.table_widget.setFocus()
 
-
+'''
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
     width = 800  # Specify the desired width of the form
     height = 600  # Specify the desired height of the form
     database_window = DatabaseViewerForm(width, height, customer_db())
+    log_message("Database was viewed")
     database_window.show()
     sys.exit(app.exec_())
+'''
