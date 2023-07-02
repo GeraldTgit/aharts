@@ -1,26 +1,25 @@
-# Anthony's Home Appliance Repair Ticketing System 
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
-from PyQt5.QtCore import *
-import sys
-import os
+
+# Sub-pages
+from create_service_ticket import ServiceTicketWindow
+from backend.goto_page import return_to_previous_page
 
 # Customize scripts
-from create_service_ticket import ServiceTicketWindow
-from add_new_customer_backend import *
+from backend.add_new_customer_backend import *
 from database_viewer import *
-from logs_generator import *
-from public_backend import *
-from goto_page import *
+from backend.logs_generator import *
+from backend.public_backend import *
 
-class AddNew_CustWindow(QWidget):
-    def __init__(self):
+class AddNewCustWindow(QWidget):
+    def __init__(self, main_window):
         super().__init__()
-        # System userform title
         self.setWindowTitle("AHARTS - Add New Customer")
-        # Userform layout
-        self.setLayout(QVBoxLayout())
-        self.setWindowIcon(QIcon(tsys_icon()))
+        self.layout = QtWidgets.QVBoxLayout(self)
+        self.setWindowIcon(QtGui.QIcon(tsystem_icon()))
+
+        # Store a reference to the main form
+        self.main_window = main_window
 
         # SETUP EVERYTHING FIRST
 
@@ -38,191 +37,210 @@ class AddNew_CustWindow(QWidget):
             entry_box.setStyleSheet(txtbox_write_style)
 
         # Userform Entry box for customer identification type
-        with open(os.getcwd()+'/param/id_type.txt', 'r') as file:
+        with open(id_type_list(), 'r') as file:
             items = file.readlines()
 
         # Userform header
-        uf_header = QLabel("Anthony's Home Appliance-Repair Ticketing System")
-        uf_header.setFont(QFont('Arial', 25))
-        self.layout().addWidget(uf_header)
+        title_header = QLabel("Anthony's Home Appliance-Repair Ticketing System")
+        title_header.setFont(QFont('Arial', 25))
+        self.layout.addWidget(title_header)
 
         # Userform header Customer Information
-        uf_cust_info = QLabel("Customer Information: ")
-        uf_cust_info.setFont(QFont('Arial', 15))
-        self.layout().addWidget(uf_cust_info)
+        cust_info_header = QLabel("Customer Information: ")
+        cust_info_header.setFont(QFont('Arial', 15))
+        self.layout.addWidget(cust_info_header)
 
         # Userform header Customer ID number
-        uf_cust_tnum = QLabel("Tracking Number is auto-generated for new customers")
-        uf_cust_tnum.setFont(QFont('Arial', 9, italic=True))
-        self.layout().addWidget(uf_cust_tnum)
+        cust_tnum_lbl = QLabel("Tracking Number is auto-generated for new customers")
+        cust_tnum_lbl.setFont(QFont('Arial', 9, italic=True))
+        self.layout.addWidget(cust_tnum_lbl)
 
         # Userform header Customer First Name
-        uf_cust_fname = QLabel("First Name: ")
-        uf_cust_fname.setFont(QFont('Arial', 9))
-        self.layout().addWidget(uf_cust_fname)
+        cust_fname_lbl = QLabel("First Name: ")
+        cust_fname_lbl.setFont(QFont('Arial', 9))
+        self.layout.addWidget(cust_fname_lbl)
 
         # Userform Entry box for customer First Name
-        uf_cust_fname_entry = QLineEdit()
-        uf_cust_fname_entry.setPlaceholderText("Given name")
-        uf_cust_fname_entry.setObjectName("fname_field")
-        self.layout().addWidget(uf_cust_fname_entry)
+        cust_fname_input = QLineEdit()
+        cust_fname_input.setPlaceholderText("Given name")
+        cust_fname_input.setObjectName("fname_field")
+        self.layout.addWidget(cust_fname_input)
 
         # Userform header Customer Last Name
-        uf_cust_lname = QLabel("Last Name: ")
-        uf_cust_lname.setFont(QFont('Arial', 9))
-        self.layout().addWidget(uf_cust_lname)
+        cust_lname_lbl = QLabel("Last Name: ")
+        cust_lname_lbl.setFont(QFont('Arial', 9))
+        self.layout.addWidget(cust_lname_lbl)
 
         # Userform Entry box for customer Last Name 
-        uf_cust_lname_entry = QLineEdit()
-        uf_cust_lname_entry.setPlaceholderText("Surname")
-        uf_cust_lname_entry.setObjectName("lname_field")
-        self.layout().addWidget(uf_cust_lname_entry)
+        cust_lname_input = QLineEdit()
+        cust_lname_input.setPlaceholderText("Surname")
+        cust_lname_input.setObjectName("lname_field")
+        self.layout.addWidget(cust_lname_input)
 
         # Userform header Customer Contact Number
-        uf_cust_cnum = QLabel("Contact Number: ")
-        uf_cust_cnum.setFont(QFont('Arial', 9))
-        self.layout().addWidget(uf_cust_cnum)
+        cust_contact_num_lbl = QLabel("Contact Number: ")
+        cust_contact_num_lbl.setFont(QFont('Arial', 9))
+        self.layout.addWidget(cust_contact_num_lbl)
 
         # Userform Entry box for customer Contact Number
-        uf_cust_cnum_entry = QLineEdit()
-        uf_cust_cnum_entry.setObjectName("cnum_field")
-        uf_cust_cnum_entry.setPlaceholderText("(+63)-917-123-1234")
-        self.layout().addWidget(uf_cust_cnum_entry)
+        cust_contact_num_input = QLineEdit()
+        cust_contact_num_input.setObjectName("cnum_field")
+        cust_contact_num_input.setPlaceholderText("(+63)-917-123-1234")
+        self.layout.addWidget(cust_contact_num_input)
 
         # Userform header Customer Email Address
-        uf_cust_email = QLabel("Email Address: ")
-        uf_cust_email.setFont(QFont('Arial', 9))
-        self.layout().addWidget(uf_cust_email)
+        cust_email_lbl = QLabel("Email Address: ")
+        cust_email_lbl.setFont(QFont('Arial', 9))
+        self.layout.addWidget(cust_email_lbl)
 
         # Userform Entry box for customer Email Address
-        uf_cust_email_entry = QLineEdit()
-        uf_cust_email_entry.setObjectName("Email_field")
-        uf_cust_email_entry.setPlaceholderText("username@domain.com")
-        self.layout().addWidget(uf_cust_email_entry)
+        cust_email_input = QLineEdit()
+        cust_email_input.setObjectName("Email_field")
+        cust_email_input.setPlaceholderText("username@domain.com")
+        self.layout.addWidget(cust_email_input)
 
         # Userform header Customer Home Address
-        uf_cust_hadd = QLabel("Home Address: ")
-        uf_cust_hadd.setFont(QFont('Arial', 9))
-        self.layout().addWidget(uf_cust_hadd)
+        cust_hadd_lbl = QLabel("Home Address: ")
+        cust_hadd_lbl.setFont(QFont('Arial', 9))
+        self.layout.addWidget(cust_hadd_lbl)
 
         # Userform Entry box for customer Home Address
-        uf_cust_hadd_entry = QLineEdit()
-        uf_cust_hadd_entry.setObjectName("Hadd_field")
-        uf_cust_hadd_entry.setPlaceholderText("Home# Street Name, Barangay, City Name Province Zip Code")
-        self.layout().addWidget(uf_cust_hadd_entry)
+        cust_hadd_input = QLineEdit()
+        cust_hadd_input.setObjectName("Hadd_field")
+        cust_hadd_input.setPlaceholderText("Home# Street Name, Barangay, City Name Province Zip Code")
+        self.layout.addWidget(cust_hadd_input)
 
         # Userform header Customer identification type
-        uf_cust_pid = QLabel("Presented ID: ")
-        uf_cust_pid.setFont(QFont('Arial', 9))
-        self.layout().addWidget(uf_cust_pid)
+        cust_id_type_lbl = QLabel("Presented ID: ")
+        cust_id_type_lbl.setFont(QFont('Arial', 9))
+        self.layout.addWidget(cust_id_type_lbl)
 
-        uf_cust_pid_entry = QComboBox()        
+        self.cust_id_type_input = QComboBox()        
         # add the items to the combobox
-        uf_cust_pid_entry.currentTextChanged.connect(lambda: write_mode(uf_cust_pid_entry))
-        uf_cust_pid_entry.addItems([item.strip() for item in items])
-        uf_cust_pid_entry.setObjectName("pid_field")
-        self.layout().addWidget(uf_cust_pid_entry)
+        self.cust_id_type_input.currentTextChanged.connect(lambda: write_mode(self.cust_id_type_input))
+        self.cust_id_type_input.addItems([item.strip() for item in items])
+        self.cust_id_type_input.setObjectName("pid_field")
+        self.layout.addWidget(self.cust_id_type_input)
 
         # Setting up default font and style for text boxes
-        textbox_widgets = [uf_cust_fname_entry, uf_cust_lname_entry, uf_cust_cnum_entry, uf_cust_email_entry, uf_cust_hadd_entry]
-        #for textbox in textbox_widgets:
-        uf_cust_pid_entry.setFont(txtbox_default_font)
-        uf_cust_pid_entry.setStyleSheet(txtbox_default_style)
+        self.textbox_widgets = [cust_fname_input, cust_lname_input, cust_contact_num_input, cust_email_input, cust_hadd_input]
+        self.cust_id_type_input.setFont(txtbox_default_font)
+        self.cust_id_type_input.setStyleSheet(txtbox_default_style)
 
         # Userform header Customer actual identification
-        uf_cust_aid = QLabel("Identification")
-        uf_cust_aid.setFont(QFont('Arial', 9))
-        uf_cust_aid.setOpenExternalLinks(True)  # Enable opening links in a web browser
-        uf_cust_aid.linkActivated.connect(self.label_clicked)
-        self.layout().addWidget(uf_cust_aid)
+        self.cust_id_lbl = QLabel("Identification")
+        self.cust_id_lbl.setFont(QFont('Arial', 9))
+        self.cust_id_lbl.setOpenExternalLinks(True)  # Enable opening links in a web browser
+        self.cust_id_lbl.linkActivated.connect(self.label_clicked)
+        self.layout.addWidget(self.cust_id_lbl)
+
+        #########################################################################
+        # BUTTONS
+        #########################################################################
 
         # Upload ID button
-        uf_cust_uid_button = QPushButton("Upload ID", clicked = lambda: open_file())
-        self.layout().addWidget(uf_cust_uid_button)
+        self.cust_upload_id_btn = QPushButton("Upload ID")
+        self.cust_upload_id_btn.clicked.connect(self.open_file)
+        self.layout.addWidget(self.cust_upload_id_btn)
+
+        # Draw a horizontal line
+        self.layout.addWidget(QFrame(self, frameShape=QFrame.HLine, frameShadow=QFrame.Sunken, lineWidth=1))
+
+        # create a QHBoxLayout to hold the buttons
+        buttons_layout = QtWidgets.QHBoxLayout()
 
         # Save button
-        uf_cust_save_button = QPushButton("Save", clicked = lambda: save_it())
-        self.layout().addWidget(uf_cust_save_button)
+        save_btn = QPushButton("Save", clicked = lambda: self.save_it())
+        buttons_layout.addWidget(save_btn)
 
         # Clear all fields buttonl
-        uf_cust_clear_button = QPushButton("Clear All", clicked = lambda: clear_all())
-        self.layout().addWidget(uf_cust_clear_button)
+        clear_btn = QPushButton("Clear All", clicked = lambda: self.clear_all())
+        buttons_layout.addWidget(clear_btn)
 
-        # Open database button
-        cust_db_button = QPushButton("View Customer Database", clicked = lambda: goto_page("database_viewer.py"))
-        self.layout().addWidget(cust_db_button)
+        # add the buttons layout to the main layout
+        self.layout.addLayout(buttons_layout)
 
-        # refresh page
-        to_main_button = QPushButton("Back to Main", clicked = lambda: goto_page("main.py"))
-        self.layout().addWidget(to_main_button)
+        # create a QHBoxLayout to hold the buttons
+        buttons_layout = QtWidgets.QHBoxLayout()
 
-        # Choose for ID to upload  
-        def open_file():
-            options = QFileDialog.Options()
-            file_filter = "Image files (*.*)"
-            options |= QFileDialog.DontUseNativeDialog
-            file_name, _ = QFileDialog.getOpenFileNames(None, "Select an image file", "", file_filter, options=options)
+       # Open database button
+        cust_db_btn = QPushButton("View Customer Database", clicked = lambda: open_cust_database_viewer(self))
+        buttons_layout.addWidget(cust_db_btn)
 
-            # Check if file(s) were selected
-            if file_name:
-                # Assign the link
-                uf_cust_aid.setText(f'<a href="{file_name[0]}">{file_name[0]}</a>')
-                uf_cust_uid_button.setText("ID Updated")
+        # Go Back page
+        goback_btn = QPushButton("Go Back", clicked = lambda: return_to_previous_page(self, main_window))
+        buttons_layout.addWidget(goback_btn)
+
+        # add the buttons layout to the main layout
+        self.layout.addLayout(buttons_layout)
+
+        ########################################################
+        # FUNCTIONS
+        ########################################################
 
         # This part is very IMPORTANT!!
         self.show()
 
-        # To confirm if user wants to save update
-        def save_it():       
-            msgBox = QMessageBox()
-            msgBox.setIcon(QMessageBox.Question)
-            msgBox.setText("Are you sure you want to save changes?")
-            msgBox.setWindowTitle("AHARTS")
-            msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
-            msgBox.buttonClicked.connect(QMessageBox)
+    def open_file(self):
+        options = QFileDialog.Options()
+        file_filter = "Image files (*.*)"
+        options |= QFileDialog.DontUseNativeDialog
+        file_name, _ = QFileDialog.getOpenFileNames(None, "Select an image file", "", file_filter, options=options)
 
-            returnValue = msgBox.exec()
-            if returnValue == QMessageBox.Ok:
-                # Save and closes customer_db() in excel application if open
-                save_and_close_database(customer_db())
+        # Check if file(s) were selected
+        if file_name:
+            # Assign the link
+            self.cust_id_lbl.setText(f'<a href="{file_name[0]}">{file_name[0]}</a>')
+            self.cust_upload_id_btn.setText("ID Updated")
 
-                # Transferring the selected file to /../temp_db/id/  
-                destination_path = upload_identification(uf_cust_aid.text())
-                
-                # List customer information
-                customer_info = [cust_info.text() for cust_info in textbox_widgets] + [uf_cust_pid_entry.currentText(),destination_path]
-                
-                # Save new customer to database
-                save_new(customer_info)
-                # Reset components values               
-                clear_all()    
-                open_create_service_ticket_window(self)
+    def save_it(self):
+        msgBox = QMessageBox()
+        msgBox.setIcon(QMessageBox.Question)
+        msgBox.setText("Are you sure you want to save changes?")
+        msgBox.setWindowTitle("AHARTS")
+        msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+        msgBox.buttonClicked.connect(QMessageBox)
 
+        returnValue = msgBox.exec()
+        if returnValue == QMessageBox.Ok:
+            # Save and closes customer_db() in excel application if open
+            save_and_close_database(customer_db())
 
-        def open_create_service_ticket_window(self):
-            # Show the other user form and hide the main form
-            # Create an instance of the other user form
-            self.create_service_ticket_window = ServiceTicketWindow()
-            # Add the other user form to the layout of the main form
-            self.layout().addLayout(self.create_service_ticket_window.layout())
-            self.create_service_ticket_window.show()
-            self.hide()
+            # Transferring the selected file to /../temp_db/id/  
+            destination_path = upload_identification(self.cust_id_lbl.text())
 
-        # Clear all fields button
-        def clear_all():
-            for textbox in textbox_widgets:
-                textbox.clear()
-            uf_cust_pid_entry.setCurrentIndex(-1)
-            uf_cust_uid_button.setText("Upload ID")
-            uf_cust_aid.setText("Identification")
+            # List customer information
+            customer_info = [cust_info.text() for cust_info in self.textbox_widgets] + [self.cust_id_type_input.currentText(), destination_path]
+
+            # Save new customer to database
+            save_new(customer_info)
+            # Reset components values               
+            self.clear_all()
+            self.open_create_service_ticketwindow()
+
+    def clear_all(self):
+        for textbox in self.textbox_widgets:
+            textbox.clear()
+        self.cust_id_type_input.setCurrentIndex(-1)
+        self.cust_upload_id_btn.setText("Upload ID")
+        self.cust_id_lbl.setText("Identification")
 
     def label_clicked(self, url):
-    # Handle the label click event
+        # Handle the label click event
         print(f"Label clicked: {url}")
+
+    def open_create_service_ticketwindow(self):     
+        self.hide()
+        self.create_service_ticketwindow = ServiceTicketWindow(self)
+        self.create_service_ticketwindow.show()
+
+    def closeEvent(self, event):
+        return_to_previous_page(self, self.main_window)
 
 '''
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     mw = AddNew_CustWindow()
     mw.show()
-    sys.exit(app.exec_())'''
+    sys.exit(app.exec_())
+'''   #'''
