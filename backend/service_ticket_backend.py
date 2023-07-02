@@ -5,12 +5,12 @@ import tempfile
 import shutil
 import pyperclip
 
-from public_backend import *
-from logs_generator import *
+from backend.public_backend import *
+from backend.logs_generator import *
 
 # Types of Appliances
 def appliances():
-    with open(os.getcwd()+'/param/appliances.txt', 'r') as file:
+    with open(pwd_()+'/param/appliances.txt', 'r') as file:
         appliances = file.readlines()
 
     return appliances
@@ -27,7 +27,7 @@ def check_serv_ticket_db():
             writer.writerow(headers)
             log_message("Service-Ticket database created.")
 
-def save_new(service_info):
+def save_new_ticket(service_info):
     check_serv_ticket_db()    
     # Assigning customer tracking number
     with open(service_ticket_db(), 'r') as file:
@@ -47,7 +47,7 @@ def save_new(service_info):
     new_entry_ticket_id = highest_ticket_id + 1
     pyperclip.copy(new_entry_ticket_id)
 
-    # Concatenate customer information
+    # Concatenate service information
     service_info.insert(0,new_entry_ticket_id)
     
     # Rest of the code to update or append rows
