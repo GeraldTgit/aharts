@@ -1,5 +1,6 @@
 # Anthony's Home Appliance Repair Ticketing System
 from PyQt5.QtWidgets import QMessageBox
+import pyperclip
 import tempfile
 import datetime
 import shutil
@@ -7,15 +8,11 @@ import os
 import csv
 
 # Customize scripts
-from logs_generator import *
-from add_new_customer_backend import *
-from goto_page import *
-from public_backend import *
+from database_viewer import *
+from backend.public_backend import *
+from backend.logs_generator import *
 
 # SETUP EVERYTHING FIRST
-
-# Customer database header
-headers = ['Customer ID', 'First Name', 'Last Name', 'Contact Number', 'Email', 'Home Address', 'ID Type', 'ID Path']
 
 def upload_identification(id_path):
     # Slicing identification label to get the id absolute path only
@@ -52,16 +49,9 @@ def upload_identification(id_path):
     except:
         pass
 
-# Check if the customer.csv file exists in the customer_db() directory
-def check_customer_db():
-    if not os.path.isfile(customer_db()):
-        # Create a new customer.csv file with headers
-        with open(customer_db(), 'w', newline='') as file:
-            writer = csv.writer(file)
-            writer.writerow(headers)
-            log_message("Customer database created.")
 
-def save_new(customer_info):         
+def save_new(customer_info):
+    check_customer_db()         
     # Assigning customer tracking number
     with open(customer_db(), 'r') as file:
         reader = csv.reader(file)
@@ -78,6 +68,8 @@ def save_new(customer_info):
 
     # Assign a value of 1 if no existing entries
     new_entry_cust_id = highest_cust_id + 1
+    # Saving to clipboard
+    pyperclip.copy(new_entry_cust_id)
 
     # Concatenate customer information
     customer_info.insert(0,new_entry_cust_id)
