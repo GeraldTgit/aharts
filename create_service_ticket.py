@@ -1,27 +1,33 @@
 # Anthony's Home Appliance Repair Ticketing System
-from PyQt5.QtWidgets import *
-from PyQt5.QtGui import *
+from PyQt5.QtWidgets import QApplication, QVBoxLayout, QLabel, QLineEdit, QPushButton, QComboBox, QFrame, QFormLayout, QHBoxLayout, QWidget, QMessageBox
+from PyQt5.QtGui import QFont, QIcon
 from PyQt5.QtCore import *
-import sys
+
+# Sub-pages
+from troubleshooting import TroubleshootingWindow
 
 # Customize scripts
 from database_viewer import *
-from logs_generator import *
-from public_backend import *
-from goto_page import *
-from service_ticket_backend import *
+from backend.logs_generator import *
+from backend.public_backend import *
+from backend.goto_page import return_to_previous_page
+from backend.service_ticket_backend import *
 
 class ServiceTicketWindow(QWidget):
-    def __init__(self):
+    def __init__(self, main_window):
         super().__init__()
         self.setWindowTitle("AHARTS - Create Service Ticket")
-        self.setLayout(QVBoxLayout())
+        self.layout = QVBoxLayout(self)
+        self.setWindowIcon(QtGui.QIcon(tsystem_icon()))
+
+        # Store a reference to the main form
+        self.main_window = main_window
 
         # Look for customer information based on tracking number
         def look_up_cust():     
-            #write_mode(cust_tnum_entry)      
+            #write_mode(cust_tnum_input)      
             # Get the search query from the entry box
-            search_query = cust_tnum_entry.text()
+            search_query = cust_tnum_input.text()
             # Open the CSV file and search for the customer information
             with open(customer_db(), 'r') as file:
                 reader = csv.reader(file)
@@ -38,84 +44,105 @@ class ServiceTicketWindow(QWidget):
 
 
         # Header
-        header = QLabel("Anthony's Home Appliance-Repair Ticketing System")
-        header.setFont(QFont('Arial', 25))
-        self.layout().addWidget(header)
+        title_header = QLabel("Anthony's Home Appliance-Repair Ticketing System")
+        title_header.setFont(QFont('Arial', 25))
+        self.layout.addWidget(title_header)
 
         # Customer Information Section
-        cust_info = QLabel("Customer Information:")
-        cust_info.setFont(QFont('Arial', 15))
-        self.layout().addWidget(cust_info)
+        cust_info_header = QLabel("Customer Information:")
+        cust_info_header.setFont(QFont('Arial', 15))
+        self.layout.addWidget(cust_info_header)
 
         form_layout = QFormLayout()
 
         # Tracking Number
         cust_tnum = QLabel("Tracking Number:")
         cust_tnum.setFont(QFont('Arial', 9))
-        cust_tnum_entry = QLineEdit()
-        cust_tnum_entry.setPlaceholderText("Input customer tracking number here...")
-        cust_tnum_entry.textChanged.connect(look_up_cust)
-        form_layout.addRow(cust_tnum, cust_tnum_entry)
+        cust_tnum_input = QLineEdit()
+        cust_tnum_input.setPlaceholderText("Input customer tracking number here...")
+        cust_tnum_input.textChanged.connect(look_up_cust)
+        form_layout.addRow(cust_tnum, cust_tnum_input)
 
-        self.layout().addLayout(form_layout)
+        self.layout.addLayout(form_layout)
 
         # What's customer full name label
         cust_fullname_lbl = QLabel("What's the customer tracking number?")
         cust_fullname_lbl.setFont(QFont('Arial', 12))
-        self.layout().addWidget(cust_fullname_lbl)
+        self.layout.addWidget(cust_fullname_lbl)
 
         # Appliance Information Section
         service_ticket_header = QLabel("Appliance Information:")
         service_ticket_header.setFont(QFont('Arial', 15))
-        self.layout().addWidget(service_ticket_header)
+        self.layout.addWidget(service_ticket_header)
 
         # Drop down options for types of appliances
         appliance_combo_box = QComboBox()
         appliance_combo_box.addItems([appliance.strip() for appliance in appliances()])
 
         # Textbox placeholder
-        brand_txtbox = QLineEdit()
-        brand_txtbox.setPlaceholderText("Samsung, Panasonic, LG, etc.")
+        brand_input = QLineEdit()
+        brand_input.setPlaceholderText("Samsung, Panasonic, LG, etc.")
 
-        model_txtbox = QLineEdit()
-        model_txtbox.setPlaceholderText("T-1000")
+        model_input = QLineEdit()
+        model_input.setPlaceholderText("T-1000")
 
-        issue_txtbox = QLineEdit()
-        issue_txtbox.setPlaceholderText("Not responding")
+        issue_input = QLineEdit()
+        issue_input.setPlaceholderText("Not responding")
 
         form_layout = QFormLayout()
         form_layout.addRow(QLabel("Type of Appliance:"), appliance_combo_box)
-        form_layout.addRow(QLabel("Brand:"), brand_txtbox)
-        form_layout.addRow(QLabel("Model:"), model_txtbox)
-        form_layout.addRow(QLabel("Issue:"), issue_txtbox)
+        form_layout.addRow(QLabel("Brand:"), brand_input)
+        form_layout.addRow(QLabel("Model:"), model_input)
+        form_layout.addRow(QLabel("Issue:"), issue_input)
 
-        self.layout().addLayout(form_layout)
+        self.layout.addLayout(form_layout)
 
         # Form Widgets ################################################################################
 
-        textbox_widgets = [cust_tnum_entry, brand_txtbox, model_txtbox, issue_txtbox]
+        textbox_widgets = [cust_tnum_input, brand_input, model_input, issue_input]
 
-        # BUTTONS ##########################################################################################
+        #########################################################################
+        # BUTTONS
+        #########################################################################
+
+        # Draw a horizontal line
+        self.layout.addWidget(QFrame(self, frameShape=QFrame.HLine, frameShadow=QFrame.Sunken, lineWidth=1))
+
+        # create a QHBoxLayout to hold the buttons
+        buttons_layout = QHBoxLayout()
 
         # Save button
-        cust_save_button = QPushButton("Save", clicked=lambda: create_ticket())
-        self.layout().addWidget(cust_save_button)
+        save_button = QPushButton("Save", clicked = lambda: create_ticket())
+        buttons_layout.addWidget(save_button)
 
-        # Clear all fields button
-        cust_clear_button = QPushButton("Clear All", clicked=lambda: clear_textbox())
-        self.layout().addWidget(cust_clear_button)
+        # Clear all fields buttonl
+        clear_button = QPushButton("Clear All", clicked = lambda: clear_textbox())
+        buttons_layout.addWidget(clear_button)
+
+        # add the buttons layout to the main layout
+        self.layout.addLayout(buttons_layout)
+
+        # create a QHBoxLayout to hold the buttons
+        buttons_layout = QHBoxLayout()
 
         # Open database button
-        cust_db_button = QPushButton("View Customer Database", clicked=lambda: goto_page("database_viewer.py"))
-        self.layout().addWidget(cust_db_button)
+        serviceticket_db_btn = QPushButton("View Service-Ticket Database", clicked = lambda: open_serviceticket_database_viewer(self))
+        buttons_layout.addWidget(serviceticket_db_btn)
 
-        # Back to Main button
-        to_main_button = QPushButton("Back to Main", clicked=lambda: goto_page("main.py"))
-        self.layout().addWidget(to_main_button)
+        # Go back to main page
+        goback_btn = QPushButton("Go Back", clicked = lambda: return_to_previous_page(self, main_window))
+        buttons_layout.addWidget(goback_btn)
+
+        # add the buttons layout to the main layout
+        self.layout.addLayout(buttons_layout)
 
         self.show()
 
-        def create_ticket():
+        ########################################################
+        # FUNCTIONS
+        ########################################################
+
+        def create_ticket():           
             msgBox = QMessageBox()
             msgBox.setIcon(QMessageBox.Question)
             msgBox.setText("Are you sure you want to save changes?")
@@ -124,11 +151,12 @@ class ServiceTicketWindow(QWidget):
             msgBox.buttonClicked.connect(QMessageBox)
 
             returnValue = msgBox.exec()
+
             if returnValue == QMessageBox.Ok:
                 serv_info = [serv_data.text() for serv_data in textbox_widgets]
                 serv_info.insert(1, appliance_combo_box.currentText())
-                save_new(serv_info)
-                goto_page("troubleshooting.py")
+                save_new_ticket(serv_info)
+                self.open_troubleshootingwindow()
 
         def clear_textbox():
             for textbox in textbox_widgets:
@@ -137,11 +165,24 @@ class ServiceTicketWindow(QWidget):
             cust_fullname_lbl.setText("What's the customer tracking number?")
 
         # Transfer/set latest customer id
-        cust_tnum_entry.setText(pyperclip.paste())
+        cust_tnum_input.setText(pyperclip.paste())
         pyperclip.copy('')
+
+    #######################################d#################
+    # MORE FUNCTIONS
+    ########################################################
+
+    def open_troubleshootingwindow(self):
+        self.hide()
+        self.troubleshootingwindow = TroubleshootingWindow(self)
+        self.troubleshootingwindow.show()
+
+    def closeEvent(self, event):
+        return_to_previous_page(self, self.main_window)
 
 '''
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     mw = ServiceTicketWindow()
-    sys.exit(app.exec_())'''
+    sys.exit(app.exec_())  
+''' #'''
