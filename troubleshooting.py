@@ -1,164 +1,185 @@
-from PyQt5.QtWidgets import *
-from PyQt5.QtGui import *
-import pyperclip
+# Anthony's Home Appliance Repair Ticketing System
+# Common packages and customize scripts
+from backend.public_backend import *
 
 # Customize scripts
+# Sub-pages
+from add_new_cust import AddNewCustWindow
+from edit_customer import Edit_CustWindow
+from create_service_ticket import ServiceTicketWindow
+from troubleshooting import TroubleshootingWindow
+
+# Backend scripts
 from database_viewer import *
 from backend.logs_generator import *
-from backend.public_backend import *
-from backend.goto_page import return_to_previous_page
-from backend.troubleshooting_backend import *
+from backend.goto_page import *
 
-class TroubleshootingWindow(QWidget):
-    def __init__(self, main_window):
+# Param checker
+setup_log_file()
+#check_customer_db()
+
+current_time = datetime.datetime.now()
+current_hour = current_time.hour
+
+# Task bar icon
+ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid())
+
+if current_hour < 12:
+    greetings = "Good morning!"
+elif 12 <= current_hour < 18:
+    greetings = "Good afternoon!"
+else:
+    greetings = "Good evening!"
+
+current_date = current_time.strftime("%A, %B %d, %Y")
+
+class MainForm(QWidget):
+    def __init__(self):
         super().__init__()
-        self.setWindowTitle("AHARTS - Troubleshooting")
-        self.layout = QtWidgets.QVBoxLayout(self)
-        self.setWindowIcon(QtGui.QIcon(tsystem_icon()))
+        self.setWindowTitle("AHARTS - Main Menu")
+        self.setLayout(QVBoxLayout())
+        self.setWindowIcon(QIcon(tsystem_icon()))
 
-        # Store a reference to the main form
-        self.main_window = main_window
-        
-        # Header
-        header = QtWidgets.QLabel("Anthony's Home Appliance-Repair Ticketing System")
-        header.setFont(QtGui.QFont('Arial', 25))
-        self.layout.addWidget(header)
+        # Userform header
+        main_header = QLabel("Anthony's Home Appliance-Repair Ticketing System")
+        main_header.setFont(QFont('Arial', 25))
+        self.layout().addWidget(main_header)
 
-        # Troubleshooting information section
-        troubleshoot_header = QtWidgets.QLabel("Troubleshooting Information:")
-        troubleshoot_header.setFont(QtGui.QFont('Arial', 15))
-        self.layout.addWidget(troubleshoot_header)
+        # Userform greeting
+        greeting_header = QLabel(greetings)
+        greeting_header.setFont(QFont('Arial', 15))
+        self.layout().addWidget(greeting_header)
 
-        form_layout = QtWidgets.QFormLayout()
+        # Show date today
+        label_today = QLabel(f"Today is {current_date}")
+        label_today.setFont(QFont('Arial', 9))
+        self.layout().addWidget(label_today, alignment=Qt.AlignTop | Qt.AlignRight)
 
-        # Service Ticket Number
-        serv_ticket = QtWidgets.QLabel("Service-Ticket Number:")
-        serv_ticket.setFont(QtGui.QFont('Arial', 9))
-        serv_ticket_entry = QtWidgets.QLineEdit()
-        serv_ticket_entry.setPlaceholderText("Input Service-Ticket number here...")
-        serv_ticket_entry.setText(pyperclip.paste())
-        form_layout.addRow(serv_ticket, serv_ticket_entry)
+        # create a QLabel object to display the time
+        self.lbl_current_time = QLabel(self)
+        self.lbl_current_time.setFont(QFont('Arial', 9))
+        self.layout().addWidget(self.lbl_current_time, alignment=Qt.AlignTop | Qt.AlignRight)
 
-        self.layout.addLayout(form_layout)
+        # start the timer to update the label
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.update_time)
+        self.timer.start(1000) # update every 1 second
 
-        # What's customer full name label
-        cust_ticket_lbl = QtWidgets.QLabel("What's the customer Service-Ticket number?")
-        cust_ticket_lbl.setFont(QtGui.QFont('Arial', 12))
-        self.layout.addWidget(cust_ticket_lbl)
-
-        # Customer information for this ticket
-        cust_info_lbl = QtWidgets.QLabel("Customer Name: Ipsum Dolor")
-        cust_info_lbl.setFont(QtGui.QFont('Arial', 12))
-        self.layout.addWidget(cust_info_lbl)
-
-        # Textbox placeholders
-        service_info = QtWidgets.QComboBox()
-        service_info.addItems([service.strip() for service in services()])
-
-        broken_comp_txtbox = QtWidgets.QLineEdit()
-        broken_comp_txtbox.setPlaceholderText("Fuse, Wiring, Capacitor etc.")
-
-        quantity_txtbox = QtWidgets.QLineEdit()
-        quantity_txtbox.setPlaceholderText("Number only (1, 2, 10)")
-
-        price_txtbox = QtWidgets.QLineEdit()
-        price_txtbox.setPlaceholderText("Number only (50, 150, 300)")
-
-        form_layout = QtWidgets.QFormLayout()
-        form_layout.addRow(QtWidgets.QLabel("Type of Service:"), service_info)
-        form_layout.addRow(QtWidgets.QLabel("Broken Component:"), broken_comp_txtbox)
-        form_layout.addRow(QtWidgets.QLabel("Quantity:"), quantity_txtbox)
-        form_layout.addRow(QtWidgets.QLabel("Price:"), price_txtbox)
-
-        self.layout.addLayout(form_layout)
-
-        # Buttons to modify data in table
-        add_button = QtWidgets.QPushButton("Add")
-        add_button.clicked.connect(lambda: add_data(service_info.currentText(), broken_comp_txtbox.text(), quantity_txtbox.text(), price_txtbox.text(), table_widget))
-
-        remove_button = QtWidgets.QPushButton("Remove")
-        remove_button.clicked.connect(lambda: remove_data(table_widget))
-
-        # Create a layout for the buttons
-        buttons_layout = QtWidgets.QHBoxLayout()
-        buttons_layout.addStretch()
-        buttons_layout.addWidget(add_button)
-        buttons_layout.addWidget(remove_button)
-
-        # Add the layout with buttons to the form layout
-        form_layout.addRow(buttons_layout)
-
-        # Create a table widget to display the transferred data with column headers
-        table_widget = QtWidgets.QTableWidget()
-        table_widget.setColumnCount(4)
-        table_widget.setHorizontalHeaderLabels(["Service", "Broken Component", "Quantity", "Price"])
-
-        # Set the column resize mode to stretch
-        header = table_widget.horizontalHeader()
-        header.setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
-
-        self.layout.addWidget(table_widget)
-
-        # Add Data inside the Table
-        def add_data(service, broken_component, quantity, price, table_widget):
-            row_count = table_widget.rowCount()
-            table_widget.insertRow(row_count)
-            table_widget.setItem(row_count, 0, QtWidgets.QTableWidgetItem(service))
-            table_widget.setItem(row_count, 1, QtWidgets.QTableWidgetItem(broken_component))
-            table_widget.setItem(row_count, 2, QtWidgets.QTableWidgetItem(quantity))
-            table_widget.setItem(row_count, 3, QtWidgets.QTableWidgetItem(price))
-
-        # Remove Data inside the Table
-        def remove_data(table_widget):
-            selected_row = table_widget.currentRow()
-            if selected_row >= 0:
-                table_widget.removeRow(selected_row)
+        # Customer form header
+        cust_header = QLabel("Customer Form")
+        cust_header.setFont(QFont('Arial', 15))
+        self.layout().addWidget(cust_header)
 
         #########################################################################
         # BUTTONS
         #########################################################################
 
-        # Draw a horizontal line
-        self.layout.addWidget(QFrame(self, frameShape=QFrame.HLine, frameShadow=QFrame.Sunken, lineWidth=1))
-
         # create a QHBoxLayout to hold the buttons
-        buttons_layout = QHBoxLayout()
+        cust_buttons_layout = QHBoxLayout()
 
-        # Save button
-        save_button = QPushButton("Save")
-        buttons_layout.addWidget(save_button)
+        # Create a button to open the other user form
+        cust_entry_button = QPushButton("Add New Customer", clicked = lambda: self.open_addnew_custwindow())
+        cust_buttons_layout.addWidget(cust_entry_button)
 
-        # Clear all fields buttonl
-        clear_button = QPushButton("Clear All")
-        buttons_layout.addWidget(clear_button)
+        # call aharts_edit_customer.py
+        cust_edit_button = QPushButton("Edit Customer Information", clicked = lambda: self.open_edit_custwindow())
+        cust_buttons_layout.addWidget(cust_edit_button)
 
         # add the buttons layout to the main layout
-        self.layout.addLayout(buttons_layout)
+        self.layout().addLayout(cust_buttons_layout)
 
-        # create a QHBoxLayout to hold the buttons
-        buttons_layout = QHBoxLayout()
+        # Ticket form header
+        cust_header = QLabel("Ticket Form")
+        cust_header.setFont(QFont('Arial', 15))
+        self.layout().addWidget(cust_header)
+
+        # call aharts_ticket_entry.py
+        ticket_entry_button = QPushButton("Service Ticket", clicked = lambda: self.open_create_service_ticketwindow())
+        self.layout().addWidget(ticket_entry_button)
+
+        # Appliance troubleshooting log
+        appliance_ts_log = QPushButton("Appliance Troubleshooting Log", clicked = lambda: self.open_troubleshootingwindow())
+        self.layout().addWidget(appliance_ts_log)
+
+        # Databases
+        cust_header_db = QLabel("Database")
+        cust_header_db.setFont(QFont('Arial', 15))
+        self.layout().addWidget(cust_header_db)
+
+        # Open database button
+        cust_db_btn = QPushButton("View Customer Database", clicked = lambda: open_cust_database_viewer(self))
+        self.layout().addWidget(cust_db_btn)
 
         # Open database button
         serviceticket_db_btn = QPushButton("View Service-Ticket Database", clicked = lambda: open_serviceticket_database_viewer(self))
-        buttons_layout.addWidget(serviceticket_db_btn)
+        self.layout().addWidget(serviceticket_db_btn)
 
-        # Go back to main page
-        goback_btn = QPushButton("Go Back", clicked = lambda: return_to_previous_page(self, main_window))
-        buttons_layout.addWidget(goback_btn)
+        # refresh page
+        reload_button = QPushButton("RELOAD PAGE", clicked = lambda: reload_main())
+        reload_button.setFont(QFont('Arial', 15))
+        self.layout().addWidget(reload_button)
+        
+        ########################################################
+        # FUNCTIONS
+        ########################################################
+        def reload_main():
+            # Close the existing main form by quitting the application
+            app.quit()
+            # Restart the application
+            subprocess.Popen([sys.executable, __file__])
 
-        # add the buttons layout to the main layout
-        self.layout.addLayout(buttons_layout)
+    def open_addnew_custwindow(self):
+        # Show the customer form and hide the main form 
+        addnew_custwindow = AddNewCustWindow(self)
+        addnew_custwindow.show()
+        self.hide()
 
-        self.show()
-
-        # Removing clipboard history
-        pyperclip.copy('')
+    def open_edit_custwindow(self):
+        self.edit_custwindow = Edit_CustWindow(self)
+        self.edit_custwindow.show()
+        self.hide()
+        
+    def open_create_service_ticketwindow(self):
+        self.create_service_ticketwindow = ServiceTicketWindow(self)
+        self.create_service_ticketwindow.show()
+        self.hide()
+       
+    def open_troubleshootingwindow(self):
+        self.troubleshootingwindow = TroubleshootingWindow(self)
+        self.troubleshootingwindow.show()
+        self.hide()
+                 
+    # This code updates lbl_current_time every seconds  
+    def update_time(self):
+        # get the current time as a string
+        current_time = datetime.datetime.now().strftime("%I:%M:%S %p")
+        # update the text property of the existing QLabel object
+        self.lbl_current_time.setText(current_time)
 
     def closeEvent(self, event):
-        return_to_previous_page(self, self.main_window)
+        reply = QMessageBox.question(
+            self,
+            "Close Application",
+            "Are you sure you want to close the application?",
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.No
+        )
 
-'''
-if __name__ == '__main__':
-    app = QtWidgets.QApplication(sys.argv)
-    mw = TroubleshootingWindow()
-    sys.exit(app.exec_())'''
+        if reply == QMessageBox.Yes:
+            event.accept()
+        else:
+            event.ignore()
+
+try:
+
+    # Main application
+    if __name__ == '__main__':
+        app = QApplication(sys.argv)
+        main_form = MainForm()
+        main_form.show()
+        sys.exit(app.exec_())
+
+except Exception as e:
+    # Log the exception message and traceback
+    error_message = f"Error: {e}\nTraceback: {traceback.format_exc()}"
+    log_message(error_message)
