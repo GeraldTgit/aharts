@@ -3,7 +3,8 @@ A ticketing system for my father's Home Appliance Repair shop.
 
 Menu Page:
 
-![image](https://github.com/GeraldTgit/aharts/assets/117510768/99b2aca2-a873-4c16-88fb-43c98a2ab076)
+![image](https://github.com/GeraldTgit/aharts/assets/117510768/2c7ee228-d762-417d-b519-5006d8e04751)
+
 
 Add New Customer Page:
 
@@ -29,6 +30,7 @@ Troubleshooting Page
 
 ![image](https://github.com/GeraldTgit/aharts/assets/117510768/4c1f2b11-25a5-4cf9-9ed6-0429991722f3)
 
-tsystem.ico
+tsystem logo/icon
 
-![image](https://github.com/GeraldTgit/aharts/assets/117510768/65d0a0f9-47d0-4fb5-9fa1-fa2b4ef684f8)
+![tsystem](https://github.com/GeraldTgit/aharts/assets/117510768/ee103caf-a233-43b4-9091-3b433af06088)
+
