@@ -1,18 +1,11 @@
 # Anthony's Home Appliance Repair Ticketing System
-# Common packages
-from PyQt5.QtWidgets import *
-from PyQt5.QtGui import *
-from PyQt5.QtCore import *
-import traceback
-import subprocess
-import datetime
-import ctypes
-import sys
+# Common packages and customize scripts
+from backend.public_backend import *
 
 # Customize scripts
 # Sub-pages
-from aharts_cust_form import AddNewCustWindow
-from aharts_edit_customer import Edit_CustWindow
+from add_new_cust import AddNewCustWindow
+from edit_customer import Edit_CustWindow
 from create_service_ticket import ServiceTicketWindow
 from troubleshooting import TroubleshootingWindow
 
@@ -20,11 +13,10 @@ from troubleshooting import TroubleshootingWindow
 from database_viewer import *
 from backend.logs_generator import *
 from backend.goto_page import *
-from backend.public_backend import *
 
 # Param checker
 setup_log_file()
-check_customer_db()
+#check_customer_db()
 
 current_time = datetime.datetime.now()
 current_hour = current_time.hour
@@ -50,18 +42,24 @@ class MainForm(QWidget):
 
         # Userform header
         main_header = QLabel("Anthony's Home Appliance-Repair Ticketing System")
-        main_header.setFont(QFont('Arial', 25))
+        main_header.setFont(QFont('Arial', 20))
         self.layout().addWidget(main_header)
 
+        # create a QHBoxLayout to hold the greeting_and_lbl_today_layout
+        greeting_and_lbl_today_layout = QHBoxLayout()
+
         # Userform greeting
-        greeting_header = QLabel(greetings)
+        greeting_header = QLabel(f"Hi there, {greetings}")
         greeting_header.setFont(QFont('Arial', 15))
-        self.layout().addWidget(greeting_header)
+        greeting_and_lbl_today_layout.addWidget(greeting_header)
 
         # Show date today
         label_today = QLabel(f"Today is {current_date}")
         label_today.setFont(QFont('Arial', 9))
-        self.layout().addWidget(label_today, alignment=Qt.AlignTop | Qt.AlignRight)
+        greeting_and_lbl_today_layout.addWidget(label_today, alignment=Qt.AlignRight)
+
+        # add the greeting_and_lbl_today_layout layout to the main layout
+        self.layout().addLayout(greeting_and_lbl_today_layout)
 
         # create a QLabel object to display the time
         self.lbl_current_time = QLabel(self)
@@ -73,28 +71,43 @@ class MainForm(QWidget):
         self.timer.timeout.connect(self.update_time)
         self.timer.start(1000) # update every 1 second
 
+        # Draw a horizontal line
+        self.layout().addWidget(QFrame(self, frameShape=QFrame.HLine, frameShadow=QFrame.Sunken, lineWidth=1))
+
         # Customer form header
         cust_header = QLabel("Customer Form")
         cust_header.setFont(QFont('Arial', 15))
         self.layout().addWidget(cust_header)
 
+    
         #########################################################################
         # BUTTONS
         #########################################################################
 
-        # create a QHBoxLayout to hold the buttons
+        # Create the button layout
         cust_buttons_layout = QHBoxLayout()
-
+        
         # Create a button to open the other user form
-        cust_entry_button = QPushButton("Add New Customer", clicked = lambda: self.open_addnew_custwindow())
+        cust_entry_button = QPushButton("Add New Customer", clicked=lambda: self.open_addnew_custwindow())
+        cust_entry_icon = QIcon(icons() + "add_new_customer.png")
+        cust_entry_button.setIcon(cust_entry_icon)
+        cust_entry_button.setIconSize(QSize(24, 24))  # Adjust the icon size as needed
+        cust_entry_button.setFixedSize(250, 50)  # Set the desired button size
         cust_buttons_layout.addWidget(cust_entry_button)
 
         # call aharts_edit_customer.py
         cust_edit_button = QPushButton("Edit Customer Information", clicked = lambda: self.open_edit_custwindow())
+        edit_customer_icon = QIcon(icons()+"edit_customer.png")
+        cust_edit_button.setIcon(edit_customer_icon)
+        cust_edit_button.setIconSize(QSize(24, 24))  # Adjust the icon size as needed
+        cust_edit_button.setFixedSize(250, 50)  # Set the desired button size
         cust_buttons_layout.addWidget(cust_edit_button)
 
         # add the buttons layout to the main layout
         self.layout().addLayout(cust_buttons_layout)
+
+        # Draw a horizontal line
+        self.layout().addWidget(QFrame(self, frameShape=QFrame.HLine, frameShadow=QFrame.Sunken, lineWidth=1))
 
         # Ticket form header
         cust_header = QLabel("Ticket Form")
@@ -103,29 +116,42 @@ class MainForm(QWidget):
 
         # call aharts_ticket_entry.py
         ticket_entry_button = QPushButton("Service Ticket", clicked = lambda: self.open_create_service_ticketwindow())
+        service_ticket_icon = QIcon(icons()+"service_ticket.png")
+        ticket_entry_button.setIcon(service_ticket_icon)
         self.layout().addWidget(ticket_entry_button)
 
         # Appliance troubleshooting log
         appliance_ts_log = QPushButton("Appliance Troubleshooting Log", clicked = lambda: self.open_troubleshootingwindow())
+        ts_order_icon = QIcon(icons()+"troubleshooting_order.png")
+        appliance_ts_log.setIcon(ts_order_icon)
         self.layout().addWidget(appliance_ts_log)
 
+        # Draw a horizontal line
+        self.layout().addWidget(QFrame(self, frameShape=QFrame.HLine, frameShadow=QFrame.Sunken, lineWidth=1))
+
         # Databases
-        cust_header_db = QLabel("Database")
-        cust_header_db.setFont(QFont('Arial', 15))
-        self.layout().addWidget(cust_header_db)
+        database_header = QLabel("Databases")
+        database_header.setFont(QFont('Arial', 15))
+        self.layout().addWidget(database_header)
+
 
         # Open database button
         cust_db_btn = QPushButton("View Customer Database", clicked = lambda: open_cust_database_viewer(self))
+        cust_db_icon = QIcon(icons()+"customer_database.png")
+        cust_db_btn.setIcon(cust_db_icon)
         self.layout().addWidget(cust_db_btn)
 
         # Open database button
         serviceticket_db_btn = QPushButton("View Service-Ticket Database", clicked = lambda: open_serviceticket_database_viewer(self))
+        serviceticket_db_icon = QIcon(icons()+"service_ticket_database.png")
+        serviceticket_db_btn.setIcon(serviceticket_db_icon)
         self.layout().addWidget(serviceticket_db_btn)
 
         # refresh page
         reload_button = QPushButton("RELOAD PAGE", clicked = lambda: reload_main())
         reload_button.setFont(QFont('Arial', 15))
         self.layout().addWidget(reload_button)
+        
         
         ########################################################
         # FUNCTIONS
@@ -137,25 +163,25 @@ class MainForm(QWidget):
             subprocess.Popen([sys.executable, __file__])
 
     def open_addnew_custwindow(self):
-        # Show the customer form and hide the main form
-        self.hide()
+        # Show the customer form and hide the main form 
         addnew_custwindow = AddNewCustWindow(self)
         addnew_custwindow.show()
+        self.hide()
 
     def open_edit_custwindow(self):
-        self.hide()
         self.edit_custwindow = Edit_CustWindow(self)
         self.edit_custwindow.show()
+        self.hide()
         
     def open_create_service_ticketwindow(self):
-        self.hide()
         self.create_service_ticketwindow = ServiceTicketWindow(self)
         self.create_service_ticketwindow.show()
+        self.hide()
        
     def open_troubleshootingwindow(self):
-        self.hide()
         self.troubleshootingwindow = TroubleshootingWindow(self)
         self.troubleshootingwindow.show()
+        self.hide()
                  
     # This code updates lbl_current_time every seconds  
     def update_time(self):
