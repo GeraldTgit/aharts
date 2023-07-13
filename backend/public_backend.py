@@ -2,9 +2,7 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 import subprocess
-import pyperclip
 import traceback
-import pyperclip
 import tempfile
 import datetime
 import psutil
@@ -14,59 +12,61 @@ import sys
 import csv
 import os
 
+from functools import lru_cache
+
+# May main header / Application name
+my_main_header = "⎾Anthony's Home Appliance-Repair Ticketing System⏌"
+
 # present working directory
+@lru_cache(maxsize=None)
 def pwd_():
     return os.getcwd().replace('\\','/')+"/"
 
 # PARAMETERS
 # Parameter directory
-def param():
-    return pwd_()+'param/'
+param_dir = pwd_()+'param/'
+
+# Icons/logo directory
+icons_dir = pwd_()+'icons/'
 
 # id_type_list icon absolute path
-def id_type_list():
-    return param()+'id_type.txt'
+id_type_list_dir = param_dir+'id_type.txt'
+
+# tsystem log directory
+logs_dir = pwd_()+"system_logs/"
 
 # DATABASES
 # temporary directory path
-def temp_db():
-    return pwd_()+"temp_db/"
+temp_db_dir =  pwd_()+"temp_db/"
+
+# id directory
+id_db_dir = temp_db_dir+"id/"
 
 # customer database absolute path
-def customer_db():
-    return temp_db()+"customer.csv"
+customer_db_dir = temp_db_dir+"customer.csv"
 
 # service ticket database absolute path
-def service_ticket_db():
-    return temp_db()+"service_ticket.csv"
+service_ticket_db_dir = temp_db_dir+"service_ticket.csv"
 
 # troubleshooting order
-def troubleshooting_order_db():
-    return temp_db()+"troubleshooting_order.csv"
+troubleshooting_order_db_dir = temp_db_dir+"troubleshooting_order.csv"
 
 
 # BEAUTIFICATIONS
 # id_type list absolute path
-def tsystem_icon():
-    return pwd_()+"tsystem.ico"
+tsystem_icon = pwd_()+"tsystem.ico"
 
 # Task bar icon
-def myappid():
-    return 'tsystem.aharts.ticketingsystem.1'  # Replace with a unique identifier
+myappid = 'tsystem.aharts.ticketingsystem.1'  # Replace with a unique identifier
+
 
 ########################################################
 # FUNCTIONS
 ########################################################
-
-# If copied to clipboard is numeric return, else do nothing
-def if_valid_txn_number(in_clipboard):
-    if in_clipboard.isnumeric() == True:
-        return in_clipboard
     
-
 def look_up_cust_tracking_id(service_ticket_id):
     # Open the CSV file and search for the customer information
-    with open(service_ticket_db(), 'r') as file:
+    with open(service_ticket_db_dir, 'r') as file:
         reader = csv.reader(file)
         for row in reader:
             if service_ticket_id in row:
@@ -75,9 +75,10 @@ def look_up_cust_tracking_id(service_ticket_id):
         else:
             return None
 
+@lru_cache(maxsize=None)
 def look_up_appliance(service_ticket_id):
     # Open the CSV file and search for the customer information
-    with open(service_ticket_db(), 'r') as file:
+    with open(service_ticket_db_dir, 'r') as file:
         reader = csv.reader(file)
         for row in reader:
             if service_ticket_id in row:
@@ -86,9 +87,10 @@ def look_up_appliance(service_ticket_id):
         else:
             return "No Service-Ticket Found"        
 
-def look_up_cust_name(customer_tracking_id):
+@lru_cache(maxsize=None)
+def look_up_cust_name(customer_tracking_id): 
     # Open the CSV file and search for the customer information
-    with open(customer_db(), 'r') as file:
+    with open(customer_db_dir, 'r') as file:
         reader = csv.reader(file)
         for row in reader:
             if customer_tracking_id in row:
@@ -97,10 +99,10 @@ def look_up_cust_name(customer_tracking_id):
         else:
             return "No Information Found"
 
-
+@lru_cache(maxsize=None)
 def look_up_ts_order_data(service_ticket_id):
     # Load Troubleshooting order base on service_ticket_id
-    with open(troubleshooting_order_db(), 'r') as file:
+    with open(troubleshooting_order_db_dir, 'r') as file:
         reader = csv.reader(file)
         # Append order id to the rest of order details
         data_rows = [[row[0]]+row[3:] for row in reader if row and row[1] == service_ticket_id]
