@@ -1,11 +1,6 @@
 # Anthony's Home Appliance Repair Ticketing System
-from PyQt5.QtWidgets import QMessageBox
-import pyperclip
-import tempfile
-import datetime
-import shutil
-import os
-import csv
+# Common packages and customize scripts
+from backend.public_backend import *
 
 # Customize scripts
 from database_viewer import *
@@ -13,6 +8,17 @@ from backend.public_backend import *
 from backend.logs_generator import *
 
 # SETUP EVERYTHING FIRST
+
+# Check if the customer.csv file exists in the customer_db_dir directory
+headers = ['Customer ID', 'First Name', 'Last Name', 'Contact Number', 'Email', 'Home Address', 'ID Type', 'ID Path']
+def check_customer_db():
+    if not os.path.isfile(customer_db_dir):
+        # Create a new customer.csv file with headers
+        with open(customer_db_dir, 'w', newline='') as file:
+            writer = csv.writer(file, delimiter=',')
+            writer.writerow(headers)
+            log_message("Customer database created.")
+
 
 def upload_identification(id_path):
     # Slicing identification label to get the id absolute path only
@@ -27,7 +33,7 @@ def upload_identification(id_path):
     if id_path == "Identification":
         return "No Idenfication provided."
 
-    destination_folder = temp_db()+"id/"
+    destination_folder = id_db_dir
                     
     # Get the filename and extension from the source path
     file_name = os.path.basename(id_path)
@@ -44,16 +50,16 @@ def upload_identification(id_path):
     destination_path=destination_path.replace(' ','_')                   
     try:
         shutil.copy2(id_path, destination_path)
-        log_message(f"Identification uploaded: {destination_path}")
-        return destination_path
+        log_message(f"Identification uploaded: {new_file_name}")
+        return new_file_name.replace(' ','_') 
     except:
         pass
 
 
 def save_new(customer_info):
-    check_customer_db()         
+    check_customer_db()      
     # Assigning customer tracking number
-    with open(customer_db(), 'r') as file:
+    with open(customer_db_dir, 'r') as file:
         reader = csv.reader(file)
         # skip header row if it exists
         if csv.Sniffer().has_header(file.read(1024)):
@@ -68,14 +74,12 @@ def save_new(customer_info):
 
     # Assign a value of 1 if no existing entries
     new_entry_cust_id = highest_cust_id + 1
-    # Saving to clipboard
-    pyperclip.copy(new_entry_cust_id)
 
     # Concatenate customer information
     customer_info.insert(0,new_entry_cust_id)
     
     # Rest of the code to update or append rows
-    with open(customer_db(), 'r') as file:
+    with open(customer_db_dir, 'r') as file:
         reader = csv.reader(file)
         rows = list(reader)
         
@@ -99,9 +103,11 @@ def save_new(customer_info):
             writer.writerows(rows)  # Write the rows
 
     # Replace the original file with the updated file
-    shutil.move(temp_file.name, customer_db())
+    shutil.move(temp_file.name, customer_db_dir)
     
     # Prompt message and log
     message = f"New customer added : {customer_info}"
     QMessageBox.information(None, "AHARTS", message)        
     log_message(message)
+
+    return new_entry_cust_id
