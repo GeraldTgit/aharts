@@ -2,48 +2,37 @@ from backend.public_backend import *
 from backend.logs_generator import *
 
 
-# Troubleshooting types
+# Troubleshooting order types
 def services():
-    return ["REPAIR ONLY/LABOR", "REPLACED BROKEN PARTS"]
+    return ['REPAIR ONLY/LABOR', 'REPLACED BROKEN PARTS']
 
-
-# Check if the customer.csv file exists in the customer_db() directory
-table_widget_headers = ["Service", "Broken Component", "Quantity", "Price", "Subtotal"]
-headers = ["Order ID","Service-Ticket ID", "Customer ID"] + table_widget_headers
 
 ###################################################################################################################################
 
-# Checks if troubleshooting order exist
 def check_troubleshooting_order_db():
-    if not os.path.isfile(troubleshooting_order_db()):
-        # Create a new customer.csv file with headers
-        with open(troubleshooting_order_db(), 'w', newline='') as file:
-            writer = csv.writer(file, delimiter=',')
-            writer.writerow(headers)
-            log_message("Troubleshooting Order database created.")
+    if not os.path.isfile(troubleshooting_order_db_dir):
+        # Create a new service ticket.parquet file with service_ticket_db_headers
+        df = pd.DataFrame(columns=ts_order_db_headers)
+        df.to_parquet(troubleshooting_order_db_dir)
+        log_message('Troubleshooting Order database created.')
 
 ###################################################################################################################################
 
 def generate_order_id(table_widget):
-    # Read existing data from the file
-    with open(troubleshooting_order_db(), 'r') as file:       
-        reader = csv.reader(file)
-        # skip header row if it exists
-        if csv.Sniffer().has_header(file.read(1024)):
-            file.seek(0)
-            next(reader)
+    # Read existing data from the Parquet file into a DataFrame
+    df = pd.read_parquet(troubleshooting_order_db_dir)
 
-        try:
-            # Get the max value from the first column or assign 0 if the reader is empty
-            highest_order_id = max(int(row[0]) for row in reader)
-        except ValueError:
-            highest_order_id = 0
+    if len(df) > 0:
+        # Get the max value from the 'Order ID' column or assign 0 if the DataFrame is empty
+        highest_order_id = int(df['Order ID'].max())
+    else:
+        highest_order_id = 0
 
-    # Check highest Order ID in table_widget which is in the first column
     try:
+        # Check highest Order ID in table_widget which is in the first column
         table_order_ids = [int(table_widget.item(row, 0).text()) for row in range(table_widget.rowCount())]
     except:
-        QMessageBox.information(None, "AHARTS", 'Please try again')
+        QMessageBox.information(None, 'AHARTS', 'Please try again')
 
     highest_table_order_id = max(table_order_ids) if table_order_ids else None
 
@@ -52,9 +41,10 @@ def generate_order_id(table_widget):
     elif highest_table_order_id is None and highest_order_id is not None:
         highest_order_id += 1
     else:
-        highest_order_id = highest_table_order_id + 1
+        highest_order_id = max(highest_order_id, highest_table_order_id) + 1
 
     return highest_order_id
+
 
 ###################################################################################################################################
 
@@ -66,7 +56,7 @@ def compute_subtotal(quantity,price):
         return round(float(price), 2)
     else:
         return 0.0     
-    
+
 ###################################################################################################################################
 
 # Compute Grand Total
@@ -81,95 +71,88 @@ def compute_grand_total(table_widget):
                 continue
             grand_total += subtotal
     # Display the grand total in the table
-    return f"Grand Total: {grand_total}"
+    return f'Php {grand_total}'
 
 ###################################################################################################################################
 
-def save_ts_order(table_widget, service_ticket_id, cust_name):
-    # Read existing data from the file
-    rows = []
-    with open(troubleshooting_order_db(), 'r') as file:
-        reader = csv.reader(file)
-        rows = list(reader)
+def save_ts_order(table_widget, service_ticket_id, customer_id):
+    check_troubleshooting_order_db()
 
-    # Get the order IDs from the table_widget
-    table_order_ids = [table_widget.item(row, 0).text() for row in range(table_widget.rowCount())]
+    # Read data from QTableWidget
+    table_data = []
 
-    # Remove rows that have matching service_ticket_id but not in the table_widget
-    rows = [row for row in rows if row[1] != service_ticket_id or row[0] in table_order_ids]
-
-    # Append new rows from the table_widget or modify existing rows with matching order_id and service_ticket_id
     for row in range(table_widget.rowCount()):
         row_data = []
+        for col in range(table_widget.columnCount()):
+            item = table_widget.item(row, col)
+            row_data.append(item.text())
+        table_data.append(row_data)
+        
+    
+    # Insert Service-Ticket ID and Customer ID in table_data
+    for row in table_data:
+        row.insert(1, service_ticket_id)
+        row.insert(2, customer_id)
 
-        # Get the order ID from the table_widget
-        order_id = table_widget.item(row, 0).text()
 
-        # Append the order ID, service_ticket_id, and cust_name to the row_data
-        row_data.append(order_id)
-        row_data.append(service_ticket_id)
-        row_data.append(cust_name)
+    # Read and filter parquet data based on Service-Ticket ID
+    parquet_data = pd.read_parquet(troubleshooting_order_db_dir)
+    filtered_data = parquet_data[parquet_data['Service-Ticket ID'].isin([int(row[1]) for row in table_data])]
 
-        # Append the rest of the row data
-        for column in range(1, table_widget.columnCount()):  # Skip the first column
-            item = table_widget.item(row, column)
-            if item is not None:
-                row_data.append(item.text())
-            else:
-                row_data.append("")  # Empty cell
+    # Convert Order ID, Service-Ticket ID, and Customer ID to integers
+    filtered_data['Order ID'] = filtered_data['Order ID'].astype(int)
+    filtered_data['Service-Ticket ID'] = filtered_data['Service-Ticket ID'].astype(int)
+    filtered_data['Customer ID'] = filtered_data['Customer ID'].astype(int)
 
-        # Check if there is an existing row with the same order ID and service_ticket_id
-        existing_row = None
-        for i, existing_row_data in enumerate(rows):
-            if existing_row_data[0] == order_id and existing_row_data[1] == service_ticket_id:
-                existing_row = i
-                break
+    # Update or append data in the parquet file
+    for row in table_data:
+        order_id = int(row[0])
+        if order_id in filtered_data['Order ID'].values:
 
-        # Update or append the row data
-        if existing_row is not None:
-            rows[existing_row] = row_data  # Update the existing row
+            # Update data from table_data to filtered_data
+            filtered_data.loc[filtered_data['Order ID'] == order_id, 'Service-Ticket ID'] = int(row[1])
+            filtered_data.loc[filtered_data['Order ID'] == order_id, 'Customer ID'] = int(row[2])
+            filtered_data.loc[filtered_data['Order ID'] == order_id, 'Service'] = row[3]
+            filtered_data.loc[filtered_data['Order ID'] == order_id, 'Broken Component'] = row[4]
+            filtered_data.loc[filtered_data['Order ID'] == order_id, 'Quantity'] = row[5]
+            filtered_data.loc[filtered_data['Order ID'] == order_id, 'Price'] = row[6]
+            filtered_data.loc[filtered_data['Order ID'] == order_id, 'Subtotal'] = row[7]
+
+            # Prompt message and log
+            message = f"An Order has been updated: {[row[i] for i in range(8)]}"
+            log_message(message)
+            QMessageBox.information(None, "AHARTS", message)
+
         else:
-            rows.append(row_data)  # Append a new row
+            # Append new data to filtered_data
+            print('Append new data to filtered_data')
+            new_row = pd.DataFrame(
+                [[int(row[0]), int(row[1]), int(row[2]), row[3], row[4], row[5], row[6], row[7]]],
+                columns=['Order ID', 'Service-Ticket ID', 'Customer ID', 'Service', 'Broken Component', 'Quantity',
+                        'Price', 'Subtotal'])
+            # Append other columns from table_data if needed
+            filtered_data = pd.concat([filtered_data, new_row], ignore_index=True)
 
-    # Write the modified data back to the file
-    with open(troubleshooting_order_db(), 'w', newline='') as file:
-        writer = csv.writer(file)
-        writer.writerows(rows)
+            message = f"New Order added: {[row[i] for i in range(8)]}"
+            log_message(message)
+            QMessageBox.information(None, "AHARTS", message)
 
-    # Removes duplicate rows that has the same Order ID and service_ticket_id
-    remove_duplicate_rows()
+    # Save the updated parquet data back to the file
+    updated_data = pd.concat([parquet_data, filtered_data], ignore_index=True)
+    updated_data.drop_duplicates(subset='Order ID', keep='last', inplace=True)
+    updated_data.to_parquet(troubleshooting_order_db_dir, index=False)
 
-    # Prompt message and log
-    message = "Troubleshooting order updated"
-    QMessageBox.information(None, "AHARTS", message)
-    log_message(message)
 
 ###################################################################################################################################
 
-# Removes duplicate rows that has the same Order ID and service_ticket_id
-def remove_duplicate_rows():
-    # Read existing data from the file
-    rows = []
-    with open(troubleshooting_order_db(), 'r') as file:
-        reader = csv.reader(file)
-        rows = list(reader)
+def look_up_ts_order_data(service_ticket_id):
+    # Read the Parquet file into a DataFrame
+    df = pd.read_parquet(troubleshooting_order_db_dir)
 
-    # Create a dictionary to keep track of unique rows based on order_id and service_ticket_id
-    unique_rows = {}
+    # Filter rows based on service_ticket_id
+    data_rows = df[df['Service-Ticket ID'] == service_ticket_id]
 
-    # Iterate over the rows and store unique rows in the dictionary
-    for i, row in enumerate(rows):
-        if i == 0:  # Skip the first row (column headers)
-            continue
+    # Get the order details
+    data_rows = data_rows[['Order ID'] + list(data_rows.columns[3:])]
 
-        order_id = row[0]
-        service_ticket_id = row[1]
-        row_key = (order_id, service_ticket_id)
-        if row_key not in unique_rows:
-            unique_rows[row_key] = row
-
-    # Write the unique rows back to the file
-    with open(troubleshooting_order_db(), 'w', newline='') as file:
-        writer = csv.writer(file)
-        writer.writerow(rows[0])  # Write the column headers
-        writer.writerows(unique_rows.values())
+    return data_rows
