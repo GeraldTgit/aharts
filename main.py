@@ -12,10 +12,13 @@ from troubleshooting import TroubleshootingWindow
 # Backend scripts
 from database_viewer import *
 from backend.logs_generator import *
+from backend.main_backend import *
 
 # Param checker
 setup_log_file()
-#check_customer_db()
+check_customer_db()
+check_serv_ticket_db()
+check_troubleshooting_order_db()
 
 current_time = datetime.datetime.now()
 current_hour = current_time.hour
@@ -81,7 +84,6 @@ class MainForm(QWidget):
         cust_header.setFont(QFont('Arial', 15))
         self.layout().addWidget(cust_header, alignment=Qt.AlignCenter)
 
-    
         #########################################################################
         # BUTTONS
         #########################################################################
@@ -137,7 +139,6 @@ class MainForm(QWidget):
 
         # Add the buttons layout to the main layout
         self.layout().addLayout(cust_buttons_layout)
-
 
         # Draw a horizontal line -----------------------------------------------------------------------------
         self.layout().addWidget(QFrame(self, frameShape=QFrame.HLine, frameShadow=QFrame.Sunken, lineWidth=1))
@@ -205,19 +206,33 @@ class MainForm(QWidget):
         database_header.setFont(QFont('Arial', 15))
         self.layout().addWidget(database_header, alignment=Qt.AlignCenter)
 
+        # create a QHBoxLayout to hold the buttons
+        #db_buttons_layout = QHBoxLayout()
+
+        # create a QHBoxLayout to hold the buttons
+        db_buttons_layout = QHBoxLayout()
 
         # Open database button
-        cust_db_btn = QPushButton("View Customer Database", clicked = lambda: open_cust_database_viewer(self))
-        cust_db_icon = QIcon(icons_dir+"customer_database.png")
+        cust_db_btn = QPushButton("View Customer Database", clicked=lambda: open_cust_database_viewer(self))
+        cust_db_icon = QIcon(icons_dir + "customer_database.png")
         cust_db_btn.setIcon(cust_db_icon)
-        self.layout().addWidget(cust_db_btn)
+        db_buttons_layout.addWidget(cust_db_btn)
 
         # Open database button
-        serviceticket_db_btn = QPushButton("View Service-Ticket Database", clicked = lambda: open_serviceticket_database_viewer(self))
-        serviceticket_db_icon = QIcon(icons_dir+"service_ticket_database.png")
+        serviceticket_db_btn = QPushButton("View Service-Ticket Database", clicked=lambda: open_serviceticket_database_viewer(self))
+        serviceticket_db_icon = QIcon(icons_dir + "service_ticket_database.png")
         serviceticket_db_btn.setIcon(serviceticket_db_icon)
-        self.layout().addWidget(serviceticket_db_btn)
+        db_buttons_layout.addWidget(serviceticket_db_btn)
 
+        ts_order_db_btn = QPushButton("View Troubleshooting Order Database", clicked=lambda: open_ts_order_database_viewer(self))
+        ts_order_db_icon = QIcon(icons_dir + "troubleshooting.png")
+        ts_order_db_btn.setIcon(ts_order_db_icon)
+        db_buttons_layout.addWidget(ts_order_db_btn)
+
+        # add the QHBoxLayout to the main layout
+        self.layout().addLayout(db_buttons_layout)
+
+        
         # refresh page
         reload_button = QPushButton("RELOAD PAGE", clicked = lambda: reload_main())
         reload_button.setFont(QFont('Arial', 15))
@@ -286,5 +301,6 @@ try:
 
 except Exception as e:
     # Log the exception message and traceback
+    QMessageBox.information(None, "AHARTS", default_err_msg)
     error_message = f"Error: {e}\nTraceback: {traceback.format_exc()}"
     log_message(error_message)
