@@ -30,6 +30,10 @@ Troubleshooting Page
 
 ![image](https://github.com/GeraldTgit/aharts/assets/117510768/4c1f2b11-25a5-4cf9-9ed6-0429991722f3)
 
+Receipt Generator
+
+![image](https://github.com/GeraldTgit/aharts/assets/117510768/a4244790-db92-41c0-ad1b-7fed48a242a5)
+
 tsystem logo/icon
 
 ![tsystem](https://github.com/GeraldTgit/aharts/assets/117510768/ee103caf-a233-43b4-9091-3b433af06088)
