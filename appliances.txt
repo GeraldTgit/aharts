@@ -1,0 +1,13 @@
+
+Television
+Electric Fan
+Washing Machine
+Refrigerator
+Radio
+Amplifier
+Speaker
+Microphone
+Rice Cooker
+Microwave
+Electric Kettle
+Others
