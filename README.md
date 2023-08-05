@@ -1,9 +1,14 @@
 # aharts
 A ticketing system for my father's Home Appliance Repair shop.
 
+Splash screen
+
+![image](https://github.com/GeraldTgit/aharts/assets/117510768/7932aa7b-cdc2-415f-9325-fe4682fe5ff2)
+
+
 Menu Page:
 
-![image](https://github.com/GeraldTgit/aharts/assets/117510768/2c7ee228-d762-417d-b519-5006d8e04751)
+![image](https://github.com/GeraldTgit/aharts/assets/117510768/fd0fc28c-2e66-4180-9879-82277f9483f9)
 
 
 Add New Customer Page:
@@ -26,13 +31,23 @@ Create Service Ticket Page
 
 ![image](https://github.com/GeraldTgit/aharts/assets/117510768/c98af24d-48e0-4e26-bf4e-f10429a66e87)
 
-Troubleshooting Page
+Troubleshooting Billing Page
 
-![image](https://github.com/GeraldTgit/aharts/assets/117510768/4c1f2b11-25a5-4cf9-9ed6-0429991722f3)
+![image](https://github.com/GeraldTgit/aharts/assets/117510768/b969ddb4-df39-423a-963a-18b2b8fbd85f)
+
 
 Receipt Generator
 
 ![image](https://github.com/GeraldTgit/aharts/assets/117510768/a4244790-db92-41c0-ad1b-7fed48a242a5)
+
+AWS Account
+
+![image](https://github.com/GeraldTgit/aharts/assets/117510768/d0ab5a60-cbde-40fd-ba2d-b514a6ef9859)
+
+AWS Bucket connection successul
+
+![image](https://github.com/GeraldTgit/aharts/assets/117510768/451e6f6a-df06-444e-8853-5bba18340897)
+
 
 tsystem logo/icon
 
