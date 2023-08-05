@@ -44,9 +44,10 @@ AWS Account
 
 ![image](https://github.com/GeraldTgit/aharts/assets/117510768/d0ab5a60-cbde-40fd-ba2d-b514a6ef9859)
 
-AWS Bucket connection successul
+AWS Bucket connection successful
+_note: no uploaded file yet_
 
-![image](https://github.com/GeraldTgit/aharts/assets/117510768/451e6f6a-df06-444e-8853-5bba18340897)
+![image](https://github.com/GeraldTgit/aharts/assets/117510768/17fdd0f1-4fb1-4eae-ac41-57cec39964ae)
 
 
 tsystem logo/icon
