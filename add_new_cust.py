@@ -1,5 +1,6 @@
-from PyQt5.QtWidgets import *
-from PyQt5.QtGui import *
+# Anthony's Home Appliance Repair Ticketing System
+# Common packages and customize scripts
+from backend.public_backend import *
 
 # Sub-pages
 from create_service_ticket import ServiceTicketWindow
@@ -9,14 +10,13 @@ from backend.goto_page import return_to_previous_page
 from backend.add_new_customer_backend import *
 from database_viewer import *
 from backend.logs_generator import *
-from backend.public_backend import *
 
 class AddNewCustWindow(QWidget):
     def __init__(self, main_window):
         super().__init__()
         self.setWindowTitle("AHARTS - Add New Customer")
-        self.layout = QtWidgets.QVBoxLayout(self)
-        self.setWindowIcon(QtGui.QIcon(tsystem_icon()))
+        self.layout = QVBoxLayout(self)
+        self.setWindowIcon(QIcon(tsystem_icon))
 
         # Store a reference to the main form
         self.main_window = main_window
@@ -37,21 +37,21 @@ class AddNewCustWindow(QWidget):
             entry_box.setStyleSheet(txtbox_write_style)
 
         # Userform Entry box for customer identification type
-        with open(id_type_list(), 'r') as file:
+        with open(id_type_list_dir, 'r') as file:
             items = file.readlines()
 
         # Userform header
-        title_header = QLabel("Anthony's Home Appliance-Repair Ticketing System")
-        title_header.setFont(QFont('Arial', 25))
-        self.layout.addWidget(title_header)
+        main_header = QLabel(my_main_header)
+        main_header.setFont(QFont('Arial', 20))
+        self.layout.addWidget(main_header)
 
         # Userform header Customer Information
-        cust_info_header = QLabel("Customer Information: ")
+        cust_info_header = QLabel("Customer Information:")
         cust_info_header.setFont(QFont('Arial', 15))
         self.layout.addWidget(cust_info_header)
 
         # Userform header Customer ID number
-        cust_tnum_lbl = QLabel("Tracking Number is auto-generated for new customers")
+        cust_tnum_lbl = QLabel("Tracking Number is auto-generated for new customer")
         cust_tnum_lbl.setFont(QFont('Arial', 9, italic=True))
         self.layout.addWidget(cust_tnum_lbl)
 
@@ -61,10 +61,10 @@ class AddNewCustWindow(QWidget):
         self.layout.addWidget(cust_fname_lbl)
 
         # Userform Entry box for customer First Name
-        cust_fname_input = QLineEdit()
-        cust_fname_input.setPlaceholderText("Given name")
-        cust_fname_input.setObjectName("fname_field")
-        self.layout.addWidget(cust_fname_input)
+        self.cust_fname_input = QLineEdit()
+        self.cust_fname_input.setPlaceholderText("Given name")
+        self.cust_fname_input.setObjectName("fname_field")
+        self.layout.addWidget(self.cust_fname_input)
 
         # Userform header Customer Last Name
         cust_lname_lbl = QLabel("Last Name: ")
@@ -72,10 +72,10 @@ class AddNewCustWindow(QWidget):
         self.layout.addWidget(cust_lname_lbl)
 
         # Userform Entry box for customer Last Name 
-        cust_lname_input = QLineEdit()
-        cust_lname_input.setPlaceholderText("Surname")
-        cust_lname_input.setObjectName("lname_field")
-        self.layout.addWidget(cust_lname_input)
+        self.cust_lname_input = QLineEdit()
+        self.cust_lname_input.setPlaceholderText("Surname")
+        self.cust_lname_input.setObjectName("lname_field")
+        self.layout.addWidget(self.cust_lname_input)
 
         # Userform header Customer Contact Number
         cust_contact_num_lbl = QLabel("Contact Number: ")
@@ -119,11 +119,12 @@ class AddNewCustWindow(QWidget):
         # add the items to the combobox
         self.cust_id_type_input.currentTextChanged.connect(lambda: write_mode(self.cust_id_type_input))
         self.cust_id_type_input.addItems([item.strip() for item in items])
+        self.cust_id_type_input.setEditable(True)
         self.cust_id_type_input.setObjectName("pid_field")
         self.layout.addWidget(self.cust_id_type_input)
 
         # Setting up default font and style for text boxes
-        self.textbox_widgets = [cust_fname_input, cust_lname_input, cust_contact_num_input, cust_email_input, cust_hadd_input]
+        self.textbox_widgets = [self.cust_fname_input, self.cust_lname_input, cust_contact_num_input, cust_email_input, cust_hadd_input]
         self.cust_id_type_input.setFont(txtbox_default_font)
         self.cust_id_type_input.setStyleSheet(txtbox_default_style)
 
@@ -147,7 +148,7 @@ class AddNewCustWindow(QWidget):
         self.layout.addWidget(QFrame(self, frameShape=QFrame.HLine, frameShadow=QFrame.Sunken, lineWidth=1))
 
         # create a QHBoxLayout to hold the buttons
-        buttons_layout = QtWidgets.QHBoxLayout()
+        buttons_layout = QHBoxLayout()
 
         # Save button
         save_btn = QPushButton("Save", clicked = lambda: self.save_it())
@@ -161,7 +162,7 @@ class AddNewCustWindow(QWidget):
         self.layout.addLayout(buttons_layout)
 
         # create a QHBoxLayout to hold the buttons
-        buttons_layout = QtWidgets.QHBoxLayout()
+        buttons_layout = QHBoxLayout()
 
        # Open database button
         cust_db_btn = QPushButton("View Customer Database", clicked = lambda: open_cust_database_viewer(self))
@@ -194,6 +195,9 @@ class AddNewCustWindow(QWidget):
             self.cust_upload_id_btn.setText("ID Updated")
 
     def save_it(self):
+        if self.cust_fname_input.text() == "" and self.cust_lname_input.text() == "":
+            self.cust_fname_input.setText("Guest")
+
         msgBox = QMessageBox()
         msgBox.setIcon(QMessageBox.Question)
         msgBox.setText("Are you sure you want to save changes?")
@@ -203,9 +207,6 @@ class AddNewCustWindow(QWidget):
 
         returnValue = msgBox.exec()
         if returnValue == QMessageBox.Ok:
-            # Save and closes customer_db() in excel application if open
-            save_and_close_database(customer_db())
-
             # Transferring the selected file to /../temp_db/id/  
             destination_path = upload_identification(self.cust_id_lbl.text())
 
@@ -213,10 +214,11 @@ class AddNewCustWindow(QWidget):
             customer_info = [cust_info.text() for cust_info in self.textbox_widgets] + [self.cust_id_type_input.currentText(), destination_path]
 
             # Save new customer to database
-            save_new(customer_info)
+            recent_txn_id = save_new(customer_info)
             # Reset components values               
             self.clear_all()
-            self.open_create_service_ticketwindow()
+            # Open Service_ticket window
+            self.open_create_service_ticketwindow(recent_txn_id)
 
     def clear_all(self):
         for textbox in self.textbox_widgets:
@@ -229,9 +231,9 @@ class AddNewCustWindow(QWidget):
         # Handle the label click event
         print(f"Label clicked: {url}")
 
-    def open_create_service_ticketwindow(self):     
+    def open_create_service_ticketwindow(self,recent_txn_id):     
         self.hide()
-        self.create_service_ticketwindow = ServiceTicketWindow(self)
+        self.create_service_ticketwindow = ServiceTicketWindow(self,recent_txn_id)
         self.create_service_ticketwindow.show()
 
     def closeEvent(self, event):
