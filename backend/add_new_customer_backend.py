@@ -7,19 +7,6 @@ from database_viewer import *
 from backend.public_backend import *
 from backend.logs_generator import *
 
-# SETUP EVERYTHING FIRST
-
-# Check if the customer.csv file exists in the customer_db_dir directory
-headers = ['Customer ID', 'First Name', 'Last Name', 'Contact Number', 'Email', 'Home Address', 'ID Type', 'ID Path']
-def check_customer_db():
-    if not os.path.isfile(customer_db_dir):
-        # Create a new customer.csv file with headers
-        with open(customer_db_dir, 'w', newline='') as file:
-            writer = csv.writer(file, delimiter=',')
-            writer.writerow(headers)
-            log_message("Customer database created.")
-
-
 def upload_identification(id_path):
     # Slicing identification label to get the id absolute path only
     # Find the index of '=' and '>'
@@ -56,58 +43,37 @@ def upload_identification(id_path):
         pass
 
 
+# Save new customer information
 def save_new(customer_info):
-    check_customer_db()      
-    # Assigning customer tracking number
-    with open(customer_db_dir, 'r') as file:
-        reader = csv.reader(file)
-        # skip header row if it exists
-        if csv.Sniffer().has_header(file.read(1024)):
-            file.seek(0)
-            next(reader)
 
-        try:
-            # Get the max value from the first column or assign 0 if the reader is empty
-            highest_cust_id = max(int(row[0]) for row in reader)
-        except ValueError:
-            highest_cust_id = 0
+    # Read the Parquet file into a DataFrame
+    df = pd.read_parquet(customer_db_dir)
 
-    # Assign a value of 1 if no existing entries
+    if len(df) > 0:
+        if 0 in df['Customer ID'].values:
+            # Customer ID already exists, do nothing
+            return
+
+    # Assign a new Customer ID
+    highest_cust_id = df['Customer ID'].max() if not df.empty else 0
     new_entry_cust_id = highest_cust_id + 1
 
-    # Concatenate customer information
-    customer_info.insert(0,new_entry_cust_id)
-    
-    # Rest of the code to update or append rows
-    with open(customer_db_dir, 'r') as file:
-        reader = csv.reader(file)
-        rows = list(reader)
-        
-        if len(rows) > 0:
-            for row in rows:
-                if row[0] == 0:
-                    # Customer ID already exists, do nothing
-                    break
-            else:
-                # Customer ID doesn't exist, append a new row
-                rows.append([info for info in customer_info])
-        else:
-            # Customer.csv is empty, add the headers and append a new row
-            rows.append(headers)
-            rows.append([info for info in customer_info])
+    # Add the new customer entry to the DataFrame
+    customer_info.insert(0, new_entry_cust_id)
+    new_entry = pd.DataFrame([customer_info], columns=df.columns)
+    df = pd.concat([df, new_entry], ignore_index=True)
 
-    # Write the modified data back to the file
-    with tempfile.NamedTemporaryFile(mode='w', delete=False) as temp_file:
-        with open(temp_file.name, 'w', newline='') as file:
-            writer = csv.writer(file)
-            writer.writerows(rows)  # Write the rows
+    # Write the updated DataFrame back to the Parquet file
+    temp_file = tempfile.NamedTemporaryFile(delete=False)
+    temp_file.close()
+    df.to_parquet(temp_file.name)
 
     # Replace the original file with the updated file
     shutil.move(temp_file.name, customer_db_dir)
-    
+
     # Prompt message and log
-    message = f"New customer added : {customer_info}"
-    QMessageBox.information(None, "AHARTS", message)        
+    message = f"New customer added: {customer_info}"
+    QMessageBox.information(None, "AHARTS", message)
     log_message(message)
 
     return new_entry_cust_id
