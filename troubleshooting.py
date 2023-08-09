@@ -7,6 +7,7 @@ from database_viewer import *
 from backend.logs_generator import *
 from backend.goto_page import return_to_previous_page
 from backend.troubleshooting_backend import *
+from receipt import open_receipt
 
 class TroubleshootingWindow(QWidget):
     def __init__(self, main_window, recent_txn_id):
@@ -18,9 +19,6 @@ class TroubleshootingWindow(QWidget):
         # Store a reference to the main form
         self.main_window = main_window
         self.recent_txn_id = str(recent_txn_id)
-
-        # Check if Troubleshooting database exist
-        check_troubleshooting_order_db()
 
         # Look for customer information based on tracking number
         def look_up_order_information():
@@ -57,7 +55,7 @@ class TroubleshootingWindow(QWidget):
         self.layout.addWidget(main_header)
 
         # Troubleshooting information section
-        troubleshoot_header = QLabel("Troubleshooting Information:")
+        troubleshoot_header = QLabel("Service-Ticket Information:")
         troubleshoot_header.setFont(QFont('Arial', 15))
         self.layout.addWidget(troubleshoot_header)
 
@@ -100,7 +98,7 @@ class TroubleshootingWindow(QWidget):
 
         form_layout = QFormLayout()
         form_layout.addRow(QLabel("Type of Service:"), service_info)
-        form_layout.addRow(QLabel("Broken Component:"), broken_comp_txtbox)
+        form_layout.addRow(QLabel("Component:"), broken_comp_txtbox)
         form_layout.addRow(QLabel("Quantity:"), quantity_txtbox)
         form_layout.addRow(QLabel("Price:"), price_txtbox)
 
@@ -169,6 +167,7 @@ class TroubleshootingWindow(QWidget):
             # Check first if Service-Ticket ID exist
             service_ticket_id = validate_num_text(serv_ticket_input) 
             cust_tracking_id = look_up_cust_tracking_id(service_ticket_id)
+            
             if cust_tracking_id:
             # Generate order id for each order
                 order_id = generate_order_id(table_widget)
@@ -193,7 +192,29 @@ class TroubleshootingWindow(QWidget):
                 grand_total()
 
         def grand_total():
-            #actual_grand_total_lbl.show
+            # first, re-compute subtotal from table_widget
+            # Iterate through each row in the table_widget
+            for row in range(table_widget.rowCount()):
+                # Get the quantity and price from the respective cells in the row
+                quantity_text = table_widget.item(row, 3).text()
+                price_text = table_widget.item(row, 4).text()
+
+                # Convert quantity and price to float values
+                try:
+                    quantity = float(quantity_text)
+                    price = float(price_text)
+                except ValueError:
+                    # If there's any error in converting to float, set the subtotal to 0
+                    subtotal = price_text
+                else:
+                    # Compute the subtotal by multiplying quantity and price
+                    subtotal = compute_subtotal(quantity, price)
+
+                # Update the subtotal cell in the table_widget with the recomputed value
+                subtotal_item = QTableWidgetItem(str(subtotal))
+                table_widget.setItem(row, 5, subtotal_item)
+
+            #Then compute grand total
             actual_grand_total_lbl.setText(compute_grand_total(table_widget))
 
         # Remove Data inside the Table
@@ -228,8 +249,8 @@ class TroubleshootingWindow(QWidget):
         buttons_layout = QHBoxLayout()
 
         # Open database button
-        serviceticket_db_btn = QPushButton("View Troubleshooting Order Database", clicked = lambda: open_ts_order_database_viewer(self))
-        buttons_layout.addWidget(serviceticket_db_btn)
+        ts_order_db_btn = QPushButton("View Troubleshooting Order Database", clicked = lambda: open_ts_order_database_viewer(self))
+        buttons_layout.addWidget(ts_order_db_btn)
 
         # Go back to main page
         goback_btn = QPushButton("Go Back", clicked = lambda: return_to_previous_page(self, main_window))
@@ -237,6 +258,9 @@ class TroubleshootingWindow(QWidget):
 
         # add the buttons layout to the main layout
         self.layout.addLayout(buttons_layout)
+
+        receipt_btn = QPushButton("Receipt", clicked = lambda: open_receipt(self,''))
+        self.layout.addWidget(receipt_btn)
 
         self.show()
 
@@ -262,9 +286,13 @@ class TroubleshootingWindow(QWidget):
                 # proceed saving
                 save_ts_order(table_widget,service_ticket_id,cust_tracking_id)
 
+                msg_box = QMessageBox(QMessageBox.Information, "AHARTS", "Done update. Now preparing receipt...", QMessageBox.NoButton, self)
+                QTimer.singleShot(800, msg_box.accept)
+                msg_box.exec_()
+
+                open_receipt(self,service_ticket_id)
                 # Clean widgets
                 clear_all()
-
         
         def clear_all():
             serv_ticket_input.clear()
@@ -292,7 +320,7 @@ class TroubleshootingWindow(QWidget):
     def closeEvent(self, event):
         return_to_previous_page(self, self.main_window)
 
-
+    
 # ...
 
 '''
