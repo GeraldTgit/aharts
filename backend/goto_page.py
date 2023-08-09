@@ -1,9 +1,7 @@
-import sys
-from PyQt5.QtWidgets import QMessageBox
-
 from backend.public_backend import *
 from backend.logs_generator import log_message
 
+@lru_cache(maxsize=None)
 def return_to_previous_page(self, main_window):
     # Show the main form and hide the current open form
     try:
