@@ -7,19 +7,7 @@ from backend.logs_generator import *
 
 # Task bar icon
 ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
-
-# Save and closes customer_db in excel application if open
-def save_and_close_database(customer_db_dir):
-    for process in psutil.process_iter(['pid', 'name']):
-        if process.info['name'] == 'EXCEL.EXE':
-            try:
-                process.terminate()
-            except psutil.NoSuchProcess:
-                pass
-
-    subprocess.call(['taskkill', '/f', '/im', 'EXCEL.EXE'], shell=True)
      
-
 class HyperlinkDelegate(QStyledItemDelegate):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -98,6 +86,7 @@ class DatabaseViewerForm(QMainWindow):
         delegate = HyperlinkDelegate(self.table_widget)
         self.table_widget.setItemDelegateForColumn(7, delegate)
         self.table_widget.verticalHeader().setVisible(False)
+        self.table_widget.setItemDelegate(delegate)
 
         blue_font_color = QColor(Qt.blue)
         for row in range(self.table_widget.rowCount()):
@@ -214,7 +203,7 @@ def export_to_csv(self,db_table):
         msgBox.setText("Proceed to export the data to CSV?")
         msgBox.setWindowTitle("AHARTS")
         msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
-        msgBox.buttonClicked.connect(QMessageBox)
+        #msgBox.buttonClicked.connect(QMessageBox)
 
         # Generate the new filename with the current date
         current_date = datetime.datetime.now().strftime("%Y-%m-%d")
@@ -225,7 +214,7 @@ def export_to_csv(self,db_table):
         # Replace colons in the filename with periods
         current_time = current_time.replace(":", ".")
 
-        filename = self.windowTitle().replace(" ", ".")
+        filename = self.windowTitle().replace(" ", "_")
 
         csv_file = f'{folder_path}/{filename}_{current_date}_{current_time}.csv'
 
@@ -256,7 +245,7 @@ def import_to_parquet(self, db_table):
         msgBox.setText("Are you sure you want to import these data to database?")
         msgBox.setWindowTitle("AHARTS")
         msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
-        msgBox.buttonClicked.connect(QMessageBox)
+        #msgBox.buttonClicked.connect(QMessageBox)
 
         returnValue = msgBox.exec()
         if returnValue == QMessageBox.Ok:
