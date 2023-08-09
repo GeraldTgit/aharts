@@ -4,7 +4,7 @@ header_line_1 = "Anthony's Home Appliance Repair Shop"
 header_line_2 = "#305 Maharlika Highway, La Torre,"
 header_line_3 = "Talavera, Nueva Ecija 3114"
 header_line_4 = "Contact #: 09083287926 / 09368505809"
-header_line_5 = 'PROOF OF PAYMENT'
+header_line_5 = 'PROOF OF PURCHASED'
 
 dash_line_style = "border: none; border-bottom: 1px dashed black;"
 
@@ -29,7 +29,9 @@ def check_receipt_db():
 
 
 # Open the file in append mode and write the log message
+'''
 def log_message(message):
     check_receipt_db()
     with open(receipt_absolute_dir, 'a') as file:
         file.write(f"{process_dttm} : {message}" + "\n")
+'''
