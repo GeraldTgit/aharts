@@ -4,17 +4,7 @@ from backend.logs_generator import *
 
 # Troubleshooting order types
 def services():
-    return ['REPAIR ONLY/LABOR', 'REPLACED BROKEN PARTS']
-
-
-###################################################################################################################################
-
-def check_troubleshooting_order_db():
-    if not os.path.isfile(troubleshooting_order_db_dir):
-        # Create a new service ticket.parquet file with service_ticket_db_headers
-        df = pd.DataFrame(columns=ts_order_db_headers)
-        df.to_parquet(troubleshooting_order_db_dir)
-        log_message('Troubleshooting Order database created.')
+    return ['PURCHASED ONLY', 'REPAIR ONLY/LABOR', 'REPLACED BROKEN PARTS']
 
 ###################################################################################################################################
 
@@ -76,8 +66,6 @@ def compute_grand_total(table_widget):
 ###################################################################################################################################
 
 def save_ts_order(table_widget, service_ticket_id, customer_id):
-    check_troubleshooting_order_db()
-
     # Read data from QTableWidget
     table_data = []
 
@@ -113,7 +101,7 @@ def save_ts_order(table_widget, service_ticket_id, customer_id):
             filtered_data.loc[filtered_data['Order ID'] == order_id, 'Service-Ticket ID'] = int(row[1])
             filtered_data.loc[filtered_data['Order ID'] == order_id, 'Customer ID'] = int(row[2])
             filtered_data.loc[filtered_data['Order ID'] == order_id, 'Service'] = row[3]
-            filtered_data.loc[filtered_data['Order ID'] == order_id, 'Broken Component'] = row[4]
+            filtered_data.loc[filtered_data['Order ID'] == order_id, 'Component'] = row[4]
             filtered_data.loc[filtered_data['Order ID'] == order_id, 'Quantity'] = row[5]
             filtered_data.loc[filtered_data['Order ID'] == order_id, 'Price'] = row[6]
             filtered_data.loc[filtered_data['Order ID'] == order_id, 'Subtotal'] = row[7]
@@ -121,27 +109,24 @@ def save_ts_order(table_widget, service_ticket_id, customer_id):
             # Prompt message and log
             message = f"An Order has been updated: {[row[i] for i in range(8)]}"
             log_message(message)
-            QMessageBox.information(None, "AHARTS", message)
 
         else:
             # Append new data to filtered_data
             print('Append new data to filtered_data')
             new_row = pd.DataFrame(
                 [[int(row[0]), int(row[1]), int(row[2]), row[3], row[4], row[5], row[6], row[7]]],
-                columns=['Order ID', 'Service-Ticket ID', 'Customer ID', 'Service', 'Broken Component', 'Quantity',
+                columns=['Order ID', 'Service-Ticket ID', 'Customer ID', 'Service', 'Component', 'Quantity',
                         'Price', 'Subtotal'])
             # Append other columns from table_data if needed
             filtered_data = pd.concat([filtered_data, new_row], ignore_index=True)
 
             message = f"New Order added: {[row[i] for i in range(8)]}"
             log_message(message)
-            QMessageBox.information(None, "AHARTS", message)
-
+            
     # Save the updated parquet data back to the file
     updated_data = pd.concat([parquet_data, filtered_data], ignore_index=True)
     updated_data.drop_duplicates(subset='Order ID', keep='last', inplace=True)
     updated_data.to_parquet(troubleshooting_order_db_dir, index=False)
-
 
 ###################################################################################################################################
 
