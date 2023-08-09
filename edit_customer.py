@@ -1,15 +1,11 @@
 # Anthony's Home Appliance Repair Ticketing System
-from PyQt5.QtWidgets import QVBoxLayout, QLabel, QLineEdit, QPushButton, QComboBox, QFrame, QFileDialog, QApplication, QWidget, QMessageBox
-from PyQt5.QtGui import QFont
-import os
-import sys
-import csv
+# Common packages and customize scripts
+from backend.public_backend import *
 
 # Customize scripts
 from backend.edit_customer_backend import *
 from database_viewer import *
 from backend.logs_generator import *
-from backend.public_backend import *
 from backend.goto_page import return_to_previous_page
 
 class Edit_CustWindow(QWidget):
@@ -19,7 +15,7 @@ class Edit_CustWindow(QWidget):
         self.setWindowTitle("AHARTS - Edit Customer Information")
         # Userform layout
         self.layout = QVBoxLayout(self)
-        self.setWindowIcon(QtGui.QIcon(tsystem_icon()))
+        self.setWindowIcon(QIcon(tsystem_icon))
 
         # Store a reference to the main form
         self.main_window = main_window
@@ -40,37 +36,38 @@ class Edit_CustWindow(QWidget):
             entry_box.setStyleSheet(txtbox_write_style)
 
         # Userform Entry box for customer identification type
-        with open(id_type_list(), 'r') as file:
+        with open(id_type_list_dir, 'r') as file:
             items = file.readlines()
 
-        # Look for customer information based on tracking number
-        def look_up_cust():     
-            write_mode(cust_tnum_input_entry)      
-            # Get the search query from the entry box
-            search_query = cust_tnum_input_entry.text()
-            # Open the CSV file and search for the customer information
-            with open(customer_db(), 'r') as file:
-                reader = csv.reader(file)
-                for row in reader:
-                    if search_query in row:
-                        cust_tnum_input.setText("Tracking Number:")
-                        # Customer information found, show in the textboxes
-                        cust_fname_input.setText(row[1])
-                        cust_lname_input.setText(row[2])
-                        cust_contact_num_input.setText(row[3])
-                        cust_email_input.setText(row[4])
-                        cust_hadd_input.setText(row[5])
-                        cust_id_type_input_entry.setCurrentText(row[6])
-                        cust_id_lbl.setText(f'<a href="{row[7]}">{row[7]}</a>')
-                        break
-                    
-                    cust_tnum_input.setText("Tracking Number: NO RECORD FOUND") 
-                    clear_all()
+        def look_up_cust():
+            write_mode(cust_tnum_input_entry)
+            # Get the search query from the entry box parse
+            search_query = validate_num_text(cust_tnum_input_entry)
+
+            # Read the Parquet file into a DataFrame
+            cust_info = look_up_cust_info(search_query)
+            
+            if cust_info:
+                # Show customer information in the textboxes
+                uf_cust_info.setText("Customer Information: ")
+                cust_fname_input.setText(cust_info[0])
+                cust_lname_input.setText(cust_info[1])
+                cust_contact_num_input.setText(cust_info[2])
+                cust_email_input.setText(cust_info[3])
+                cust_hadd_input.setText(cust_info[4])
+                cust_id_type_input_entry.setCurrentText(cust_info[5])
+                try:
+                    cust_id_lbl.setText(f'<a href="{id_db_dir+cust_info[6]}">{cust_info[6]}</a>')
+                except: 
+                    pass
+            else:
+                uf_cust_info.setText("Customer Information: <b>NO RECORD FOUND</b>")
+                clear_all()
 
         # Userform header
-        uf_header = QLabel("Anthony's Home Appliance-Repair Ticketing System")
-        uf_header.setFont(QFont('Arial', 25))
-        self.layout.addWidget(uf_header)
+        main_header = QLabel(my_main_header)
+        main_header.setFont(QFont('Arial', 20))
+        self.layout.addWidget(main_header)
 
         # Userform header Customer Information
         uf_cust_info = QLabel("Customer Information: ")
@@ -190,8 +187,8 @@ class Edit_CustWindow(QWidget):
         # Draw a horizontal line
         self.layout.addWidget(QFrame(self, frameShape=QFrame.HLine, frameShadow=QFrame.Sunken, lineWidth=1))
 
-        # create a QtWidgets.QHBoxLayout() to hold the buttons
-        buttons_layout = QtWidgets.QHBoxLayout()
+        # create a QHBoxLayout() to hold the buttons
+        buttons_layout = QHBoxLayout()
 
         # Save button
         save_button = QPushButton("Save", clicked = lambda: check_before_saveit())
@@ -204,8 +201,8 @@ class Edit_CustWindow(QWidget):
         # add the buttons layout to the main layout
         self.layout.addLayout(buttons_layout)
 
-        # create a QtWidgets.QHBoxLayout() to hold the buttons
-        buttons_layout = QtWidgets.QHBoxLayout()
+        # create a QHBoxLayout() to hold the buttons
+        buttons_layout = QHBoxLayout()
 
         # Open database button
         cust_db_btn = QPushButton("View Customer Database", clicked = lambda: open_cust_database_viewer(self))
@@ -240,16 +237,13 @@ class Edit_CustWindow(QWidget):
 
     
         def check_before_saveit():
-            if cust_tnum_input_entry.text().isdigit() and cust_tnum_input_entry.text() != "":
+            if cust_tnum_input_entry.text().isdigit() and cust_tnum_input_entry.text() != "" and uf_cust_info.text() != "Customer Information: <b>NO RECORD FOUND</b>":
                 save_it()
             else:
-                QMessageBox.information(None, "AHARTS", "Customer Tracking Number is required!")
+                QMessageBox.information(None, "AHARTS", "Please enter a valid customer tracking number.")
 
         # To confirm if user wants to save update
         def save_it():
-            # Close the customer_db() Excel application so it can save changes
-            save_and_close_database(customer_db())
-
             msgBox = QMessageBox()
             msgBox.setIcon(QMessageBox.Question)
             msgBox.setText("Are you sure you want to save changes?")
