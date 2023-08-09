@@ -8,7 +8,9 @@ from add_new_cust import AddNewCustWindow
 from edit_customer import Edit_CustWindow
 from create_service_ticket import ServiceTicketWindow
 from troubleshooting import TroubleshootingWindow
+from settings import open_settings
 from receipt import open_receipt
+
 
 # Backend scripts
 from database_viewer import *
@@ -123,7 +125,7 @@ class MainForm(QWidget):
         self.layout().addWidget(QFrame(self, frameShape=QFrame.HLine, frameShadow=QFrame.Sunken, lineWidth=1))
 
         # Customer form header
-        cust_header = QLabel("Customer Form")
+        cust_header = QLabel("Customer")
         cust_header.setFont(QFont('Arial', 15))
         self.layout().addWidget(cust_header, alignment=Qt.AlignCenter)
 
@@ -187,7 +189,7 @@ class MainForm(QWidget):
         self.layout().addWidget(QFrame(self, frameShape=QFrame.HLine, frameShadow=QFrame.Sunken, lineWidth=1))
 
         # Ticket form header
-        ticket_form_header = QLabel("Ticket Form")
+        ticket_form_header = QLabel("Ticket & Billing")
         ticket_form_header.setFont(QFont('Arial', 15))
         self.layout().addWidget(ticket_form_header, alignment=Qt.AlignCenter)
 
@@ -199,7 +201,7 @@ class MainForm(QWidget):
         service_ticket_icon = QIcon(icons_dir+"service_ticket.png")
         ticket_entry_button.setIcon(service_ticket_icon)
         ticket_entry_button.setIconSize(QSize(50, 50))  # Adjust the icon size as needed
-        ticket_entry_button.setFixedSize(150, 80)  # Set the desired button size
+        ticket_entry_button.setFixedSize(130, 80)  # Set the desired button size
 
         # Set the button text alignment to center
         ticket_entry_button.setStyleSheet(style_sheet_style)
@@ -221,7 +223,7 @@ class MainForm(QWidget):
         ts_order_icon = QIcon(icons_dir+"troubleshooting_order.png")
         appliance_ts_log.setIcon(ts_order_icon)
         appliance_ts_log.setIconSize(QSize(50, 50))  # Adjust the icon size as needed
-        appliance_ts_log.setFixedSize(150, 80)  # Set the desired button size
+        appliance_ts_log.setFixedSize(130, 80)  # Set the desired button size
 
         # Set the button text alignment to center
         appliance_ts_log.setStyleSheet(style_sheet_style)
@@ -229,7 +231,7 @@ class MainForm(QWidget):
         # Create a QVBoxLayout for the button
         appliance_ts_log_layout = QVBoxLayout()
         appliance_ts_log_layout.addWidget(appliance_ts_log, alignment=Qt.AlignHCenter)
-        appliance_ts_log_layout.addWidget(QLabel("Appliance Troubleshooting Order", alignment=Qt.AlignHCenter))
+        appliance_ts_log_layout.addWidget(QLabel("Billing", alignment=Qt.AlignHCenter))
 
         # Create a QWidget for the button layout
         appliance_ts_log_widget = QWidget()
@@ -238,8 +240,53 @@ class MainForm(QWidget):
         # Add the button widget to the main layout
         ts_app_buttons_layout.addWidget(appliance_ts_log_widget, alignment=Qt.AlignCenter)
 
+        # Bill my Guest
+        bill_guest_btn = QPushButton(clicked = lambda: self.open_billing_asguest())
+        bill_guest_btn_icon = QIcon(icons_dir+"bill_guest.png")
+        bill_guest_btn.setIcon(bill_guest_btn_icon)
+        bill_guest_btn.setIconSize(QSize(50, 50))  # Adjust the icon size as needed
+        bill_guest_btn.setFixedSize(130, 80)  # Set the desired button size
+
+        # Set the button text alignment to center
+        bill_guest_btn.setStyleSheet(style_sheet_style)
+
+        # Create a QVBoxLayout for the button
+        bill_guest_btn_layout = QVBoxLayout()
+        bill_guest_btn_layout.addWidget(bill_guest_btn, alignment=Qt.AlignHCenter)
+        bill_guest_btn_layout.addWidget(QLabel("Purchase Only", alignment=Qt.AlignHCenter))
+
+        # Create a QWidget for the button layout
+        bill_guest_btn_widget = QWidget()
+        bill_guest_btn_widget.setLayout(bill_guest_btn_layout)
+
+        # Add the button widget to the main layout
+        ts_app_buttons_layout.addWidget(bill_guest_btn_widget, alignment=Qt.AlignCenter)
+
+        # RECEIPT
+        receipt_btn = QPushButton(clicked = lambda: open_receipt(self,null))
+        receipt_btn_icon = QIcon(icons_dir+"RECEIPT.png")
+        receipt_btn.setIcon(receipt_btn_icon)
+        receipt_btn.setIconSize(QSize(50, 50))  # Adjust the icon size as needed
+        receipt_btn.setFixedSize(130, 80)  # Set the desired button size
+
+        # Set the button text alignment to center
+        receipt_btn.setStyleSheet(style_sheet_style)
+
+        # Create a QVBoxLayout for the button
+        receipt_btn_layout = QVBoxLayout()
+        receipt_btn_layout.addWidget(receipt_btn, alignment=Qt.AlignHCenter)
+        receipt_btn_layout.addWidget(QLabel("Receipt", alignment=Qt.AlignHCenter))
+
+        # Create a QWidget for the button layout
+        receipt_btn_widget = QWidget()
+        receipt_btn_widget.setLayout(receipt_btn_layout)
+
+        # Add the button widget to the main layout
+        ts_app_buttons_layout.addWidget(receipt_btn_widget, alignment=Qt.AlignCenter)
+
         # Add the buttons layout to the main layout
         self.layout().addLayout(ts_app_buttons_layout)
+        
 
         # Draw a horizontal line -----------------------------------------------------------------------------
         self.layout().addWidget(QFrame(self, frameShape=QFrame.HLine, frameShadow=QFrame.Sunken, lineWidth=1))
@@ -272,9 +319,10 @@ class MainForm(QWidget):
         # add the QHBoxLayout to the main layout
         self.layout().addLayout(db_buttons_layout)
 
-        receipt_btn = QPushButton("receipt", clicked = lambda: open_receipt(self))
-        receipt_btn.setFont(QFont('Arial', 15))
-        self.layout().addWidget(receipt_btn)
+        settings_btn = QPushButton("Settings", clicked = lambda: open_settings(self))
+        settings_btn_icon = QIcon(icons_dir + "settings.png")
+        settings_btn.setIcon(settings_btn_icon)
+        self.layout().addWidget(settings_btn)
 
         # refresh page
         reload_button = QPushButton("RELOAD PAGE", clicked = lambda: reload_main())
@@ -312,8 +360,13 @@ class MainForm(QWidget):
         self.troubleshootingwindow.show()
         self.hide()
 
-    
-                
+    def open_billing_asguest(self):
+        recent_txn_id = create_dummy_transaction()
+        # Parse dummy ticket to Billing Window
+        self.troubleshootingwindow = TroubleshootingWindow(self,recent_txn_id)
+        self.troubleshootingwindow.show()
+        self.hide()
+          
     # This code updates lbl_current_time every seconds  
     def update_time(self):
         # get the current time as a string
