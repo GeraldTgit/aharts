@@ -4,14 +4,14 @@ from backend.receipt_backend import *
 from backend.troubleshooting_backend import look_up_ts_order_data
 
 
-def open_receipt(self):
-    receipt_window = ReceiptForm()
+def open_receipt(self,recent_txn_id):
+    receipt_window = ReceiptForm(recent_txn_id)
     receipt_window.setGeometry(self.geometry().x() - 200, self.geometry().y(), 200, 500)
     receipt_window.show()
 
 
 class ReceiptForm(QMainWindow):
-    def __init__(self):
+    def __init__(self, recent_txn_id):
         super().__init__()
         self.setWindowTitle('Print Receipt')
         self.setWindowIcon(QIcon(tsystem_icon))
@@ -20,8 +20,8 @@ class ReceiptForm(QMainWindow):
         main_widget = QWidget()
         self.setCentralWidget(main_widget)
 
-        # Dash line style
-        dash_line_style = "border: none; border-bottom: 1px dashed black;"
+        # Recently saved transaction number
+        self.recent_txn_id = str(recent_txn_id)
 
         # Create a layout for the main widget
         layout = QVBoxLayout(main_widget)
@@ -80,7 +80,7 @@ class ReceiptForm(QMainWindow):
         self.ts_form_layout = QFormLayout()
 
         # Troubleshooting labels
-        item_label = QLabel("Trouble:")
+        item_label = QLabel("Service:")
         qty_label = QLabel("Quantity:")
         price_label = QLabel("Price:")
         subtotal_label = QLabel("Subtotal:")
@@ -118,6 +118,9 @@ class ReceiptForm(QMainWindow):
 
         layout.addLayout(buttons_form_layout)
 
+        # Parsing the recent transaction saved
+        self.serv_ticket_input.setText(self.recent_txn_id)
+
     def look_up_order_information(self):
         service_ticket_id = validate_num_text(self.serv_ticket_input)
 
@@ -146,6 +149,7 @@ class ReceiptForm(QMainWindow):
         self.total_amount = 0
 
         grouped_data = data.groupby('Service')
+
         # Add labels for item details
         for service, group in grouped_data:
             # Create a new custom widget to combine QVBoxLayout and QFormLayout
@@ -160,7 +164,7 @@ class ReceiptForm(QMainWindow):
             ts_form_layout = QFormLayout()
             for index, row in group.iterrows():  # <- Iterate over group, not entire data
                 # Troubleshooting labels
-                broken_component = QLabel(row['Broken Component'])
+                broken_component = QLabel(row['Component'])
 
                 try:
                     quantity = int(row['Quantity'])
