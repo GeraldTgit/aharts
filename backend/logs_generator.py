@@ -1,6 +1,3 @@
-import datetime
-import os
-
 from backend.public_backend import *
 
 # Generate the new filename with the current date
@@ -9,11 +6,8 @@ current_date = datetime.datetime.now().strftime("%Y-%m-%d")
 # Generate timestamping for each log
 current_time = datetime.datetime.now().strftime("%H:%M:%S")
 
-# Setting directory
-logs_dir = temp_db()+"logs/"
-
 # log file path + new file name
-logs_absolute_dir = logs_dir + "aharts_log_" + current_date + ".log"
+logs_absolute_dir = logs_dir + "tsystem_log_" + current_date + ".log"
 
 def setup_log_file():
     # Check if the directory exists, and create it if necessary
