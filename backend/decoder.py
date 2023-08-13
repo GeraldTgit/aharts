@@ -18,7 +18,7 @@ def decrypt_string(encrypted_message, key):
         decrypted.append(decrypted_char)
     return ''.join(decrypted)
 
-# Task with a file saved on c:/path/to/do_not_delete.py
+# Task with a file saved on c:/path/to/do_not_delete.key
 # Read the file then
 # Assign the first 8 digit/chars to the random_integer variable
 # and assign the rest of the characters to the encrypted_string variable

@@ -19,7 +19,7 @@ def check_serv_ticket_db():
         df.to_parquet(service_ticket_db_dir)
         log_message("Service-Ticket database created.")
 
-def check_troubleshooting_order_db():
+def check_billing_db():
     if not os.path.isfile(troubleshooting_order_db_dir):
         # Create a new service ticket.parquet file with service_ticket_db_headers
         df = pd.DataFrame(columns=ts_order_db_headers)

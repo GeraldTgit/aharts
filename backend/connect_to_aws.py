@@ -6,6 +6,7 @@ from botocore.exceptions import ClientError
 # Replace these with your actual AWS access key and secret access key
 aws_access_key_id = 'aws_access_key_id'
 aws_secret_access_key = 'aws_secret_access_key'
+region = 'us-east-1'
 bucket_name = 'tsystem'
 file_key = 'testdatabase/customer.parquet'
 
@@ -21,14 +22,24 @@ def check_objects_in_bucket():
     try:
         # List all objects in the bucket
         response = s3.list_objects_v2(Bucket=bucket_name)
+
         # Print object keys
-        log += [f"{process_dttm()} Connection successful", '---']
-        log.append(f"{process_dttm()} List of objects in bucket '{bucket_name}':")  
+        log.append(f"{process_dttm()} Connection successful")
+        log.append('---')
+        log.append(f"{process_dttm()} List of objects in bucket '{bucket_name}':")
         for obj in response.get('Contents', []):
             log.append(f"{process_dttm()} {obj['Key']}")
             
-    except Exception as e:
-        log.append(f"{process_dttm()} An error occurred: {e}")
+    except ClientError as e:
+        if e.response['Error']['Code'] == 'NoSuchBucket':
+            # If the bucket doesn't exist, create a new one
+            try:
+                s3.create_bucket(Bucket=bucket_name, CreateBucketConfiguration={'LocationConstraint': region})
+                log.append(f"{process_dttm()} Bucket '{bucket_name}' created.")
+            except Exception as e:
+                log.append(f"{process_dttm()} An error occurred while creating the bucket: {e}")
+        else:
+            log.append(f"{process_dttm()} An error occurred: {e}")
 
     return log
 
@@ -46,4 +57,5 @@ def check_databases():
             log.append(f"{process_dttm()} An error occurred: {e}")
 
     return log
+
 

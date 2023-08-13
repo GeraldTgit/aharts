@@ -1,20 +1,24 @@
 
 from backend.public_backend import *
 from backend.receipt_backend import *
-from backend.troubleshooting_backend import look_up_ts_order_data
+from backend.billing_backend import look_up_ts_order_data
+from backend.logs_generator import log_message
 
 
 def open_receipt(self,recent_txn_id):
-    receipt_window = ReceiptForm(recent_txn_id)
+    receipt_window = ReceiptForm(recent_txn_id, self)
     receipt_window.setGeometry(self.geometry().x() - 200, self.geometry().y(), 200, 500)
     receipt_window.show()
 
 
 class ReceiptForm(QMainWindow):
-    def __init__(self, recent_txn_id):
+    def __init__(self, recent_txn_id, main_window):
         super().__init__()
-        self.setWindowTitle('Print Receipt')
+        self.setWindowTitle('Preview Receipt')
         self.setWindowIcon(QIcon(tsystem_icon))
+
+        # Store a reference to the main form
+        self.main_window = main_window
 
         # Create a main widget and set it as the central widget
         main_widget = QWidget()
@@ -80,15 +84,15 @@ class ReceiptForm(QMainWindow):
         self.ts_form_layout = QFormLayout()
 
         # Troubleshooting labels
-        item_label = QLabel("Service:")
+        item_label = QLabel("Element:")
         qty_label = QLabel("Quantity:")
         price_label = QLabel("Price:")
         subtotal_label = QLabel("Subtotal:")
 
         # Create a layout for troubleshooting labels
         ts_layout = QHBoxLayout()
-        ts_layout.addWidget(item_label)
         ts_layout.addWidget(qty_label)
+        ts_layout.addWidget(item_label)
         ts_layout.addWidget(price_label)
         ts_layout.addWidget(subtotal_label)
 
@@ -109,7 +113,7 @@ class ReceiptForm(QMainWindow):
         buttons_form_layout = QFormLayout()
 
         buttons_layout = QHBoxLayout()
-        print_button = QPushButton("PRINT", clicked=lambda: self.print_receipt())
+        print_button = QPushButton("SUBMIT", clicked=lambda: self.create_receipt())
         close_button = QPushButton("CLOSE", clicked=lambda: self.hide())
         buttons_layout.addWidget(print_button)
         buttons_layout.addWidget(close_button)
@@ -123,23 +127,25 @@ class ReceiptForm(QMainWindow):
 
     def look_up_order_information(self):
         service_ticket_id = validate_num_text(self.serv_ticket_input)
-
+        
         try:
             cust_tracking_id = int(look_up_cust_tracking_id(service_ticket_id))
-            self.cust_name.setText(f"Customer Name: <b>{look_up_cust_name(cust_tracking_id)}</b>")
+            self.name = look_up_cust_name(cust_tracking_id)
+            self.cust_name.setText(f"Customer Name: <b>{self.name}</b>")
         except:
             self.cust_name.setText("Customer Name: <b>No Information Found</b>")
             pass
 
         # Appliance for inputted service id
-        self.cust_appliance.setText(f"Appliance: <b>{look_up_appliance(service_ticket_id)}</b>")
+        self.appliance = look_up_appliance(service_ticket_id)
+        self.cust_appliance.setText(f"Appliance: <b>{self.appliance}</b>")
 
-        self.appliance_issue.setText(f"Issue: <b>{look_up_issue(service_ticket_id)}</b>")
+        self.app_issue = look_up_issue(service_ticket_id)
+        self.appliance_issue.setText(f"Issue: <b>{self.app_issue}</b>")
 
         # Load Troubleshooting order based on service_ticket_id
         data = look_up_ts_order_data(service_ticket_id)
         self.init_layout(data)
-    
     
     def init_layout(self, data):    
         # Clear the existing items in the layout
@@ -150,6 +156,10 @@ class ReceiptForm(QMainWindow):
 
         grouped_data = data.groupby('Service')
 
+        self.receipt_qty = []
+        self.item = []
+        self.price = []
+ 
         # Add labels for item details
         for service, group in grouped_data:
             # Create a new custom widget to combine QVBoxLayout and QFormLayout
@@ -165,16 +175,20 @@ class ReceiptForm(QMainWindow):
             for index, row in group.iterrows():  # <- Iterate over group, not entire data
                 # Troubleshooting labels
                 broken_component = QLabel(row['Component'])
+                self.item.append(row['Component'])
 
                 try:
                     quantity = int(row['Quantity'])
                 except ValueError:
                     quantity = 1
+                self.receipt_qty.append(quantity)
+                
 
                 try:
                     price = float(row['Price'])
                 except ValueError:
                     price = 0.0
+                self.price.append(price)
 
                 qty_data = QLabel(str(quantity))
                 try:
@@ -185,10 +199,10 @@ class ReceiptForm(QMainWindow):
                 item_total = quantity * price
                 subtotal_data = QLabel(f"{item_total:.2f}")
 
-                # Create a layout for troubleshooting labels
+                # Create a layout for billing details
                 ts_layout = QHBoxLayout()
-                ts_layout.addWidget(broken_component)
                 ts_layout.addWidget(qty_data)
+                ts_layout.addWidget(broken_component)
                 ts_layout.addWidget(price_data)
                 ts_layout.addWidget(subtotal_data)
 
@@ -249,9 +263,32 @@ class ReceiptForm(QMainWindow):
         except:
             pass
 
-    def print_receipt(self):
-        process_dttm = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    def create_receipt(self):
         self.printed_date.setText(f"Date printed: {process_dttm}")
+        
+        receipt_abs_path = receipt_db_dir + f"ServiceTicket_{self.serv_ticket_input.text()}.pdf"
+
+        customer_data = [
+        {"Service-Ticket": self.serv_ticket_input.text(), 
+         "name": self.name, 
+         "appliance": self.appliance, 
+         "app_issue": self.app_issue,
+         "process_dttm": process_dttm}
+    ]
+        receipt_items_data = {
+        "Quantity": self.receipt_qty,
+        "Item Name": self.item,
+        "Price": self.price
+    }
+        receipt_items_df = pd.DataFrame(receipt_items_data)
+        payment_amount = self.payment_input.text()
+        create_receipt(receipt_abs_path, customer_data, receipt_items_df, payment_amount)
+
+        # Prompt message and log
+        message = f"Receipt has been created for Service-Ticket Number {self.serv_ticket_input.text()}" 
+        log_message(message)
+        open_a_file(receipt_abs_path)
+        QMessageBox.information(None, "AHARTS", message)
 
 '''
 if __name__ == "__main__":

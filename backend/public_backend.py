@@ -1,3 +1,12 @@
+from reportlab.lib.pagesizes import landscape, letter
+from reportlab.platypus import SimpleDocTemplate, Spacer, Paragraph
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.platypus.flowables import HRFlowable
+from reportlab.platypus import Table, TableStyle
+from reportlab.lib.units import inch
+import win32print
+import platform
+
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
@@ -48,7 +57,7 @@ temp_db_dir =  pwd_()+"temp_db/"
 id_db_dir = temp_db_dir+"id/"
 
 # Receipt directory
-receipt_db_dir = temp_db_dir+"receipt/"
+receipt_db_dir = temp_db_dir+"receipts/"
 
 # customer database absolute path
 customer_db_dir = temp_db_dir+"customer.parquet"
@@ -147,3 +156,5 @@ def validate_num_text(widget):
         return int(new_text)
     except:
         pass
+
+

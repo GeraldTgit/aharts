@@ -7,7 +7,7 @@ from backend.public_backend import *
 from add_new_cust import AddNewCustWindow
 from edit_customer import Edit_CustWindow
 from create_service_ticket import ServiceTicketWindow
-from troubleshooting import TroubleshootingWindow
+from billing import BillingWindow
 from settings import open_settings
 from receipt import open_receipt
 
@@ -21,13 +21,10 @@ from backend.main_backend import *
 setup_log_file()
 check_customer_db()
 check_serv_ticket_db()
-check_troubleshooting_order_db()
+check_billing_db()
 
 current_time = datetime.datetime.now()
 current_hour = current_time.hour
-
-# Task bar icon
-ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
 
 if current_hour < 12:
     greetings = "Good morning!"
@@ -51,6 +48,9 @@ def show_splash_screen(width, height):
     splash.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint)
     splash.setWindowTitle("tsystem")
     splash.setWindowIcon(QIcon(tsystem_icon))
+
+    # Task bar icon
+    ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
 
     # Create a QLabel to display the animated GIF
     splash_label = QLabel(splash)
@@ -77,6 +77,9 @@ class MainForm(QWidget):
         self.setWindowTitle("AHARTS - Main Menu")
         self.setLayout(QVBoxLayout())
         self.setWindowIcon(QIcon(tsystem_icon))
+
+        # Task bar icon
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
 
         # Userform header
         main_header = QLabel(my_main_header)
@@ -356,14 +359,14 @@ class MainForm(QWidget):
         self.hide()
     
     def open_troubleshootingwindow(self):
-        self.troubleshootingwindow = TroubleshootingWindow(self,null)
+        self.troubleshootingwindow = BillingWindow(self,null)
         self.troubleshootingwindow.show()
         self.hide()
 
     def open_billing_asguest(self):
         recent_txn_id = create_dummy_transaction()
         # Parse dummy ticket to Billing Window
-        self.troubleshootingwindow = TroubleshootingWindow(self,recent_txn_id)
+        self.troubleshootingwindow = BillingWindow(self,recent_txn_id)
         self.troubleshootingwindow.show()
         self.hide()
           

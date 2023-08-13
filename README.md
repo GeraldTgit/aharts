@@ -36,9 +36,13 @@ Troubleshooting Billing Page
 ![image](https://github.com/GeraldTgit/aharts/assets/117510768/b969ddb4-df39-423a-963a-18b2b8fbd85f)
 
 
-Receipt Generator
+Preview Receipt
 
 ![image](https://github.com/GeraldTgit/aharts/assets/117510768/a4244790-db92-41c0-ad1b-7fed48a242a5)
+
+Actual REceipt in PDF
+
+![Alt text](image.png)
 
 AWS Account
 
@@ -48,6 +52,10 @@ AWS Bucket connection successful
 _note: no uploaded file yet_
 
 ![image](https://github.com/GeraldTgit/aharts/assets/117510768/17fdd0f1-4fb1-4eae-ac41-57cec39964ae)
+
+UI if no connection
+
+![Alt text](image-1.png)
 
 
 tsystem logo/icon

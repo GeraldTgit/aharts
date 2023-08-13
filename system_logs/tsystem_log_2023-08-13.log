@@ -1,0 +1,18 @@
+13:11:49 : Log file created
+14:23:13 : Receipt has been printed for Service-Ticket 1
+14:34:22 : Receipt has been printed for Service-Ticket Number 1
+14:35:58 : Receipt has been printed for Service-Ticket Number 1
+15:11:37 : Receipt has been created for Service-Ticket Number 1
+15:15:39 : Receipt has been created for Service-Ticket Number 1
+15:15:39 : This file has been accessed: C:/aharts/temp_db/receipts/ServiceTicket_1.pdf
+15:16:54 : New customer added: [135, 'Guest', '', '', '', '', '', '']
+15:16:54 : New service ticket created: [16, '135', '', '', '', '', '']
+15:16:54 : New Order added: ['3', '16', '135', 'PURCHASED ONLY', 'PrintTube', '1', '250', '250.0']
+15:16:54 : New Order added: ['4', '16', '135', 'PURCHASED ONLY', 'Wires', '5', '15', '75.0']
+15:16:54 : Receipt has been created for Service-Ticket Number 16
+15:16:54 : This file has been accessed: C:/aharts/temp_db/receipts/ServiceTicket_16.pdf
+15:19:16 : Receipt has been created for Service-Ticket Number 16
+15:19:16 : This file has been accessed: C:/aharts/temp_db/receipts/ServiceTicket_16.pdf
+15:36:15 : Customer Database was viewed
+15:36:15 : Service-Ticket Database was viewed
+15:36:15 : Troubleshooting Order Database was viewed

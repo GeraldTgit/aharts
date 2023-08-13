@@ -3,7 +3,7 @@
 from backend.public_backend import *
 
 # Sub-pages
-from troubleshooting import TroubleshootingWindow
+from billing import BillingWindow
 
 # Customize scripts
 from database_viewer import *
@@ -166,7 +166,7 @@ class ServiceTicketWindow(QWidget):
 
     def open_troubleshootingwindow(self,recent_txn_id):
         self.hide()
-        self.troubleshootingwindow = TroubleshootingWindow(self,recent_txn_id)
+        self.troubleshootingwindow = BillingWindow(self,recent_txn_id)
         self.troubleshootingwindow.show()
 
     def closeEvent(self, event):
